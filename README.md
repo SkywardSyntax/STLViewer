@@ -14,7 +14,7 @@ npm run dev
 
 ## STL File Viewer
 
-This project allows you to upload an STL file and render it using the GPU with WebGL.
+This project allows you to upload an STL file and render it using the GPU with three.js.
 
 ### Instructions
 
@@ -38,7 +38,7 @@ This project allows you to upload an STL file and render it using the GPU with W
 
 5. Upload an STL file using the file input.
 
-6. The STL file will be rendered using WebGL.
+6. The STL file will be rendered using three.js.
 
 ### Error Handling
 
@@ -49,3 +49,7 @@ If a RangeError occurs, it indicates an out-of-bounds access. This can happen if
 #### Out-of-Bounds Access Errors
 
 Out-of-bounds access errors can occur if the application tries to read data outside the bounds of the STL file. This can happen if the file is corrupted or if there is an issue with the file reading process. The application will display an error message indicating the out-of-bounds access error.
+
+#### Three.js Errors
+
+If an error occurs while rendering the STL file using three.js, the application will display an error message indicating the three.js error. This can happen if there is an issue with the STL file parsing or rendering process.

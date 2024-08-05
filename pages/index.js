@@ -13,6 +13,8 @@ function Home() {
   const handleError = (error) => {
     if (error instanceof RangeError) {
       setError('RangeError: Out of bounds access');
+    } else if (error.message && error.message.startsWith('WebGL Error:')) {
+      setError(error.message);
     } else {
       setError('An unexpected error occurred');
     }
