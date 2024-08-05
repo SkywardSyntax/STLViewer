@@ -11,3 +11,41 @@ To run this application:
 ```
 npm run dev
 ```
+
+## STL File Viewer
+
+This project allows you to upload an STL file and render it using the GPU with WebGL.
+
+### Instructions
+
+1. Clone the repository:
+   ```
+   git clone <repository-url>
+   cd <repository-directory>
+   ```
+
+2. Install dependencies:
+   ```
+   npm install
+   ```
+
+3. Run the development server:
+   ```
+   npm run dev
+   ```
+
+4. Open your browser and navigate to `http://localhost:3000`.
+
+5. Upload an STL file using the file input.
+
+6. The STL file will be rendered using WebGL.
+
+### Error Handling
+
+#### RangeError Exceptions
+
+If a RangeError occurs, it indicates an out-of-bounds access. This can happen if the STL file is malformed or if there is an issue with the file reading process. The application will display an error message indicating the RangeError.
+
+#### Out-of-Bounds Access Errors
+
+Out-of-bounds access errors can occur if the application tries to read data outside the bounds of the STL file. This can happen if the file is corrupted or if there is an issue with the file reading process. The application will display an error message indicating the out-of-bounds access error.

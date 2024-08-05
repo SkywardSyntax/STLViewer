@@ -12,3 +12,26 @@ body {
   text-rendering: optimizeLegibility;
   hyphens: auto;
 }
+
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+input[type="file"] {
+  margin: 20px 0;
+}
+
+canvas {
+  border: 1px solid #d1d1d1;
+  margin-top: 20px;
+}
+
+.error {
+  color: red;
+  font-weight: bold;
+}
