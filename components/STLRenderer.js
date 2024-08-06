@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 import { debounce } from 'lodash';
@@ -6,6 +6,10 @@ import { debounce } from 'lodash';
 function STLRenderer({ file, onError, zoomLevel }) {
   const canvasRef = useRef(null);
   const meshRef = useRef(null);
+
+  const [isDragging, setIsDragging] = useState(false);
+  const [previousMousePosition, setPreviousMousePosition] = useState({ x: 0, y: 0 });
+  const [rotation, setRotation] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -56,6 +60,11 @@ function STLRenderer({ file, onError, zoomLevel }) {
           renderer.setSize(canvas.clientWidth, canvas.clientHeight);
           camera.position.z = cameraZ * zoomLevel;
 
+          if (meshRef.current) {
+            meshRef.current.rotation.x = rotation.x;
+            meshRef.current.rotation.y = rotation.y;
+          }
+
           // Frustum culling
           const frustum = new THREE.Frustum();
           const cameraViewProjectionMatrix = new THREE.Matrix4();
@@ -78,7 +87,42 @@ function STLRenderer({ file, onError, zoomLevel }) {
     };
 
     reader.readAsArrayBuffer(file);
-  }, [file, onError, zoomLevel]);
+
+    const handleMouseDown = (event) => {
+      setIsDragging(true);
+      setPreviousMousePosition({ x: event.clientX, y: event.clientY });
+    };
+
+    const handleMouseMove = (event) => {
+      if (isDragging) {
+        const deltaMove = {
+          x: event.clientX - previousMousePosition.x,
+          y: event.clientY - previousMousePosition.y,
+        };
+
+        setRotation((prevRotation) => ({
+          x: prevRotation.x + deltaMove.y * 0.01,
+          y: prevRotation.y + deltaMove.x * 0.01,
+        }));
+
+        setPreviousMousePosition({ x: event.clientX, y: event.clientY });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [file, onError, zoomLevel, isDragging, previousMousePosition, rotation]);
 
   return <canvas ref={canvasRef} width="800" height="600"></canvas>;
 }
