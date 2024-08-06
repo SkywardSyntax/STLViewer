@@ -52,7 +52,7 @@ function Home() {
     <main>
       <h1>STL File Viewer</h1>
       <input type="file" accept=".stl" onChange={handleFileChange} />
-      <input type="range" min="0.00000001" max="100" step="0.00000001" value={zoomLevel} onChange={handleZoomChange} />
+      <input type="range" min="0.1" max="10" step="0.1" value={zoomLevel} onChange={handleZoomChange} />
       {error && <p className="error">{error}</p>}
       {file && <STLRenderer file={file} onError={handleError} zoomLevel={zoomLevel} />}
     </main>

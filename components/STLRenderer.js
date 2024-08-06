@@ -41,6 +41,11 @@ function STLRenderer({ file, onError, zoomLevel }) {
         requestAnimationFrame(animate);
         renderer.setSize(canvas.clientWidth, canvas.clientHeight);
         renderer.render(scene, camera);
+
+        if (meshRef.current) {
+          meshRef.current.rotation.x = rotation.x;
+          meshRef.current.rotation.y = rotation.y;
+        }
       };
 
       animate();
@@ -61,8 +66,8 @@ function STLRenderer({ file, onError, zoomLevel }) {
         };
 
         setRotation((prevRotation) => ({
-          x: prevRotation.x + deltaMove.y * 0.01,
-          y: prevRotation.y + deltaMove.x * 0.01,
+          x: prevRotation.x + deltaMove.y * 0.05,
+          y: prevRotation.y + deltaMove.x * 0.05,
         }));
 
         setPreviousMousePosition({ x: event.clientX, y: event.clientY });
@@ -83,6 +88,20 @@ function STLRenderer({ file, onError, zoomLevel }) {
       canvas.removeEventListener('mouseup', handleMouseUp);
     };
   }, [file, onError, zoomLevel, isDragging, previousMousePosition, rotation]);
+
+  useEffect(() => {
+    if (meshRef.current) {
+      meshRef.current.rotation.x = rotation.x;
+      meshRef.current.rotation.y = rotation.y;
+    }
+  }, [rotation]);
+
+  useEffect(() => {
+    if (meshRef.current) {
+      const scale = Math.pow(10, zoomLevel / 100);
+      meshRef.current.scale.set(scale, scale, scale);
+    }
+  }, [zoomLevel]);
 
   return <canvas ref={canvasRef} width="800" height="600"></canvas>;
 }

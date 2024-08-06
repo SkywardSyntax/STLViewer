@@ -40,6 +40,10 @@ This project allows you to upload an STL file and render it using the GPU with T
 
 6. The STL file will be rendered using Three.js.
 
+### Click and Drag Functionality
+
+To rotate the STL file, click and drag on the canvas. The rotation will be updated based on the mouse movement.
+
 ### Error Handling
 
 #### RangeError Exceptions
