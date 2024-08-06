@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import STLRenderer from '../components/STLRenderer';
+import { debounce } from 'lodash';
 
 function Home() {
   const [file, setFile] = useState(null);
@@ -23,15 +24,19 @@ function Home() {
     }
   };
 
+  const debouncedZoomChange = debounce((value) => {
+    setZoomLevel(value);
+  }, 100);
+
   const handleZoomChange = (event) => {
-    setZoomLevel(event.target.value);
+    debouncedZoomChange(event.target.value);
   };
 
   return (
     <main>
       <h1>STL File Viewer</h1>
       <input type="file" accept=".stl" onChange={handleFileChange} />
-      <input type="range" min="0.1" max="2" step="0.1" value={zoomLevel} onChange={handleZoomChange} />
+      <input type="number" min="0.00000001" max="100" step="0.00000001" value={zoomLevel} onChange={handleZoomChange} />
       {error && <p className="error">{error}</p>}
       {file && <STLRenderer file={file} onError={handleError} zoomLevel={zoomLevel} />}
     </main>

@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
+import { debounce } from 'lodash';
 
 function STLRenderer({ file, onError, zoomLevel }) {
   const canvasRef = useRef(null);
+  const meshRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -29,6 +31,7 @@ function STLRenderer({ file, onError, zoomLevel }) {
         const material = new THREE.MeshPhongMaterial({ color: 0x555555, specular: 0x111111, shininess: 200 });
         const mesh = new THREE.Mesh(geometry, material);
         scene.add(mesh);
+        meshRef.current = mesh;
 
         const boundingBox = new THREE.Box3().setFromObject(mesh);
         const center = boundingBox.getCenter(new THREE.Vector3());
@@ -52,6 +55,19 @@ function STLRenderer({ file, onError, zoomLevel }) {
           requestAnimationFrame(animate);
           renderer.setSize(canvas.clientWidth, canvas.clientHeight);
           camera.position.z = cameraZ * zoomLevel;
+
+          // Frustum culling
+          const frustum = new THREE.Frustum();
+          const cameraViewProjectionMatrix = new THREE.Matrix4();
+          camera.updateMatrixWorld();
+          camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+          cameraViewProjectionMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+          frustum.setFromProjectionMatrix(cameraViewProjectionMatrix);
+
+          if (meshRef.current) {
+            meshRef.current.visible = frustum.intersectsObject(meshRef.current);
+          }
+
           renderer.render(scene, camera);
         };
 
