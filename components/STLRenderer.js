@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { mat4 } from 'gl-matrix';
 
 function STLRenderer({ file, onError, zoomLevel }) {
   const canvasRef = useRef(null);
@@ -13,7 +14,7 @@ function STLRenderer({ file, onError, zoomLevel }) {
     const gl = canvas.getContext('webgl');
 
     if (!gl) {
-      onError('WebGL Error: Unable to initialize WebGL. Your browser or device may not support it.');
+      onError('WebGL Error: Unable to initialize WebGL. Your browser or device may not support it. This error can occur if your browser does not support WebGL or if there is an issue with the WebGL context creation.');
       return;
     }
 
@@ -44,7 +45,7 @@ function STLRenderer({ file, onError, zoomLevel }) {
       gl.shaderSource(shader, source);
       gl.compileShader(shader);
       if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        onError(`WebGL Shader Compilation Error: ${gl.getShaderInfoLog(shader)}`);
+        onError(`WebGL Shader Compilation Error: ${gl.getShaderInfoLog(shader)}. This error can occur if there is a syntax error in the shader code or if the shader code is not supported by the WebGL implementation.`);
         gl.deleteShader(shader);
         return null;
       }
@@ -64,7 +65,7 @@ function STLRenderer({ file, onError, zoomLevel }) {
     gl.linkProgram(shaderProgram);
 
     if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-      onError(`WebGL Program Linking Error: ${gl.getProgramInfoLog(shaderProgram)}`);
+      onError(`WebGL Program Linking Error: ${gl.getProgramInfoLog(shaderProgram)}. This error can occur if there is an issue with linking the vertex and fragment shaders, such as mismatched attribute or uniform names.`);
       return;
     }
 
@@ -113,8 +114,29 @@ function STLRenderer({ file, onError, zoomLevel }) {
 
         return { vertices, normals };
       } else {
-        onError('STL Parsing Error: ASCII STL files are not supported. Please provide a binary STL file.');
-        return null;
+        const textDecoder = new TextDecoder();
+        const text = textDecoder.decode(arrayBuffer);
+        const lines = text.split('\n');
+        const vertices = [];
+        const normals = [];
+        let normal = [0, 0, 0];
+
+        for (let line of lines) {
+          line = line.trim();
+          if (line.startsWith('facet normal')) {
+            const parts = line.split(' ');
+            normal = [parseFloat(parts[2]), parseFloat(parts[3]), parseFloat(parts[4])];
+          } else if (line.startsWith('vertex')) {
+            const parts = line.split(' ');
+            vertices.push(parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[3]));
+            normals.push(...normal);
+          }
+        }
+
+        return {
+          vertices: new Float32Array(vertices),
+          normals: new Float32Array(normals),
+        };
       }
     };
 

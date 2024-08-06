@@ -46,25 +46,56 @@ This project allows you to upload an STL file and render it using the GPU with W
 
 If a RangeError occurs, it indicates an out-of-bounds access. This can happen if the STL file is malformed or if there is an issue with the file reading process. The application will display an error message indicating the RangeError.
 
+**Resolution Steps:**
+1. Verify the integrity of the STL file. Ensure it is not corrupted.
+2. Check the file reading process for any potential issues.
+3. Ensure the STL file is in binary format, as ASCII STL files are not supported.
+
 #### Out-of-Bounds Access Errors
 
 Out-of-bounds access errors can occur if the application tries to read data outside the bounds of the STL file. This can happen if the file is corrupted or if there is an issue with the file reading process. The application will display an error message indicating the out-of-bounds access error.
+
+**Resolution Steps:**
+1. Verify the integrity of the STL file. Ensure it is not corrupted.
+2. Check the file reading process for any potential issues.
+3. Ensure the STL file is in binary format, as ASCII STL files are not supported.
 
 #### WebGL Initialization Errors
 
 If a WebGL initialization error occurs, it indicates that the browser or device does not support WebGL or there is an issue with the WebGL context creation. The application will display an error message indicating the WebGL initialization error.
 
+**Resolution Steps:**
+1. Ensure that your browser supports WebGL. You can check this by visiting [WebGL Report](https://get.webgl.org/).
+2. Update your browser to the latest version.
+3. Ensure that your graphics drivers are up to date.
+4. Try running the application on a different browser or device.
+
 #### WebGL Shader Compilation Errors
 
 If a WebGL shader compilation error occurs, it indicates that there is an issue with the shader code. The application will display an error message indicating the shader compilation error along with the specific error message from the WebGL context.
+
+**Resolution Steps:**
+1. Review the shader code for any syntax errors.
+2. Ensure that the shader code is compatible with the WebGL implementation.
+3. Check the specific error message from the WebGL context for more details.
 
 #### WebGL Program Linking Errors
 
 If a WebGL program linking error occurs, it indicates that there is an issue with linking the vertex and fragment shaders. The application will display an error message indicating the program linking error along with the specific error message from the WebGL context.
 
+**Resolution Steps:**
+1. Ensure that the vertex and fragment shaders have matching attribute and uniform names.
+2. Review the shader code for any issues that may cause linking errors.
+3. Check the specific error message from the WebGL context for more details.
+
 #### STL Parsing Errors
 
 If an STL parsing error occurs, it indicates that there is an issue with parsing the STL file. The application will display an error message indicating the STL parsing error. ASCII STL files are not supported, and the application will display an error message if an ASCII STL file is provided.
+
+**Resolution Steps:**
+1. Ensure that the STL file is in binary format, as ASCII STL files are not supported.
+2. Verify the integrity of the STL file. Ensure it is not corrupted.
+3. Check the file reading process for any potential issues.
 
 ### Custom WebGL Functions
 

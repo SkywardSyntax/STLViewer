@@ -13,12 +13,10 @@ function Home() {
 
   const handleError = (error) => {
     if (error instanceof RangeError) {
-      setError('RangeError: Out of bounds access');
+      setError('RangeError: Out of bounds access. This error can occur if the STL file is malformed or if there is an issue with the file reading process.');
     } else if (error.message && error.message.startsWith('WebGL Error:')) {
       setError(error.message);
     } else if (error.message && error.message.startsWith('Three.js Error:')) {
-      setError(error.message);
-    } else if (error.message && error.message.startsWith('ASCII STL Error:')) {
       setError(error.message);
     } else if (error.message && error.message.startsWith('STL Error:')) {
       setError(error.message);
