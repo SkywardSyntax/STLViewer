@@ -50,6 +50,22 @@ If a RangeError occurs, it indicates an out-of-bounds access. This can happen if
 
 Out-of-bounds access errors can occur if the application tries to read data outside the bounds of the STL file. This can happen if the file is corrupted or if there is an issue with the file reading process. The application will display an error message indicating the out-of-bounds access error.
 
+#### WebGL Initialization Errors
+
+If a WebGL initialization error occurs, it indicates that the browser or device does not support WebGL or there is an issue with the WebGL context creation. The application will display an error message indicating the WebGL initialization error.
+
+#### WebGL Shader Compilation Errors
+
+If a WebGL shader compilation error occurs, it indicates that there is an issue with the shader code. The application will display an error message indicating the shader compilation error along with the specific error message from the WebGL context.
+
+#### WebGL Program Linking Errors
+
+If a WebGL program linking error occurs, it indicates that there is an issue with linking the vertex and fragment shaders. The application will display an error message indicating the program linking error along with the specific error message from the WebGL context.
+
+#### STL Parsing Errors
+
+If an STL parsing error occurs, it indicates that there is an issue with parsing the STL file. The application will display an error message indicating the STL parsing error. ASCII STL files are not supported, and the application will display an error message if an ASCII STL file is provided.
+
 ### Custom WebGL Functions
 
 This project uses custom WebGL functions to handle STL file parsing and rendering. The custom functions include:

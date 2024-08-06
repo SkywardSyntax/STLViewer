@@ -18,8 +18,12 @@ function Home() {
       setError(error.message);
     } else if (error.message && error.message.startsWith('Three.js Error:')) {
       setError(error.message);
+    } else if (error.message && error.message.startsWith('ASCII STL Error:')) {
+      setError(error.message);
+    } else if (error.message && error.message.startsWith('STL Error:')) {
+      setError(error.message);
     } else {
-      setError('An unexpected error occurred');
+      setError(`An unexpected error occurred: ${error.message || error}`);
     }
   };
 
@@ -43,7 +47,7 @@ function Home() {
     <main>
       <h1>STL File Viewer</h1>
       <input type="file" accept=".stl" onChange={handleFileChange} />
-      <input type="number" min="0.00000001" max="100" step="0.00000001" value={zoomLevel} onChange={handleZoomChange} />
+      <input type="range" min="0.00000001" max="100" step="0.00000001" value={zoomLevel} onChange={handleZoomChange} />
       {error && <p className="error">{error}</p>}
       {file && <STLRenderer file={file} onError={handleError} zoomLevel={zoomLevel} />}
     </main>

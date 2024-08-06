@@ -13,7 +13,7 @@ function STLRenderer({ file, onError, zoomLevel }) {
     const gl = canvas.getContext('webgl');
 
     if (!gl) {
-      onError('WebGL Error: Unable to initialize WebGL.');
+      onError('WebGL Error: Unable to initialize WebGL. Your browser or device may not support it.');
       return;
     }
 
@@ -44,7 +44,7 @@ function STLRenderer({ file, onError, zoomLevel }) {
       gl.shaderSource(shader, source);
       gl.compileShader(shader);
       if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        onError(`WebGL Error: ${gl.getShaderInfoLog(shader)}`);
+        onError(`WebGL Shader Compilation Error: ${gl.getShaderInfoLog(shader)}`);
         gl.deleteShader(shader);
         return null;
       }
@@ -64,7 +64,7 @@ function STLRenderer({ file, onError, zoomLevel }) {
     gl.linkProgram(shaderProgram);
 
     if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-      onError(`WebGL Error: ${gl.getProgramInfoLog(shaderProgram)}`);
+      onError(`WebGL Program Linking Error: ${gl.getProgramInfoLog(shaderProgram)}`);
       return;
     }
 
@@ -113,7 +113,7 @@ function STLRenderer({ file, onError, zoomLevel }) {
 
         return { vertices, normals };
       } else {
-        onError('WebGL Error: ASCII STL files are not supported.');
+        onError('STL Parsing Error: ASCII STL files are not supported. Please provide a binary STL file.');
         return null;
       }
     };
