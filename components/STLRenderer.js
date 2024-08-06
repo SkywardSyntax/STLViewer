@@ -1,7 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import * as THREE from 'three';
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
-import { debounce } from 'lodash';
 
 function STLRenderer({ file, onError, zoomLevel }) {
   const canvasRef = useRef(null);
@@ -13,77 +10,163 @@ function STLRenderer({ file, onError, zoomLevel }) {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const renderer = new THREE.WebGLRenderer({ canvas });
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-    camera.position.z = 5;
+    const gl = canvas.getContext('webgl');
 
-    const ambientLight = new THREE.AmbientLight(0x404040);
-    scene.add(ambientLight);
+    if (!gl) {
+      onError('WebGL Error: Unable to initialize WebGL.');
+      return;
+    }
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(1, 1, 1).normalize();
-    scene.add(directionalLight);
-
-    const loader = new STLLoader();
-    const reader = new FileReader();
-
-    reader.onload = function(event) {
-      try {
-        const arrayBuffer = event.target.result;
-        const geometry = loader.parse(arrayBuffer);
-        const material = new THREE.MeshPhongMaterial({ color: 0x555555, specular: 0x111111, shininess: 200 });
-        const mesh = new THREE.Mesh(geometry, material);
-        scene.add(mesh);
-        meshRef.current = mesh;
-
-        const boundingBox = new THREE.Box3().setFromObject(mesh);
-        const center = boundingBox.getCenter(new THREE.Vector3());
-        const size = boundingBox.getSize(new THREE.Vector3());
-
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const fov = camera.fov * (Math.PI / 180);
-        let cameraZ = Math.abs(maxDim / 4 * Math.tan(fov * 2));
-
-        camera.position.z = cameraZ;
-
-        const minZ = boundingBox.min.z;
-        const cameraToFarEdge = minZ < 0 ? -minZ + cameraZ : cameraZ - minZ;
-
-        camera.far = cameraToFarEdge * 3;
-        camera.updateProjectionMatrix();
-
-        camera.lookAt(center);
-
-        const animate = function() {
-          requestAnimationFrame(animate);
-          renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-          camera.position.z = cameraZ * zoomLevel;
-
-          if (meshRef.current) {
-            meshRef.current.rotation.x = rotation.x;
-            meshRef.current.rotation.y = rotation.y;
-          }
-
-          // Frustum culling
-          const frustum = new THREE.Frustum();
-          const cameraViewProjectionMatrix = new THREE.Matrix4();
-          camera.updateMatrixWorld();
-          camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
-          cameraViewProjectionMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-          frustum.setFromProjectionMatrix(cameraViewProjectionMatrix);
-
-          if (meshRef.current) {
-            meshRef.current.visible = frustum.intersectsObject(meshRef.current);
-          }
-
-          renderer.render(scene, camera);
-        };
-
-        animate();
-      } catch (error) {
-        onError(`Three.js Error: ${error.message}`);
+    const vertexShaderSource = `
+      attribute vec3 aPosition;
+      attribute vec3 aNormal;
+      uniform mat4 uModelViewMatrix;
+      uniform mat4 uProjectionMatrix;
+      varying vec3 vNormal;
+      void main(void) {
+        gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aPosition, 1.0);
+        vNormal = aNormal;
       }
+    `;
+
+    const fragmentShaderSource = `
+      precision mediump float;
+      varying vec3 vNormal;
+      void main(void) {
+        vec3 lightDirection = normalize(vec3(1.0, 1.0, 1.0));
+        float lightIntensity = max(dot(vNormal, lightDirection), 0.0);
+        gl_FragColor = vec4(vec3(0.5, 0.5, 0.5) * lightIntensity, 1.0);
+      }
+    `;
+
+    const loadShader = (type, source) => {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        onError(`WebGL Error: ${gl.getShaderInfoLog(shader)}`);
+        gl.deleteShader(shader);
+        return null;
+      }
+      return shader;
+    };
+
+    const vertexShader = loadShader(gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = loadShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+    if (!vertexShader || !fragmentShader) {
+      return;
+    }
+
+    const shaderProgram = gl.createProgram();
+    gl.attachShader(shaderProgram, vertexShader);
+    gl.attachShader(shaderProgram, fragmentShader);
+    gl.linkProgram(shaderProgram);
+
+    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+      onError(`WebGL Error: ${gl.getProgramInfoLog(shaderProgram)}`);
+      return;
+    }
+
+    gl.useProgram(shaderProgram);
+
+    const aPosition = gl.getAttribLocation(shaderProgram, 'aPosition');
+    const aNormal = gl.getAttribLocation(shaderProgram, 'aNormal');
+    const uModelViewMatrix = gl.getUniformLocation(shaderProgram, 'uModelViewMatrix');
+    const uProjectionMatrix = gl.getUniformLocation(shaderProgram, 'uProjectionMatrix');
+
+    const parseSTL = (arrayBuffer) => {
+      const dataView = new DataView(arrayBuffer);
+      const isBinary = () => {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const text = event.target.result;
+          return text.indexOf('solid') === 0;
+        };
+        reader.readAsText(new Blob([arrayBuffer]));
+      };
+
+      if (isBinary()) {
+        const faces = dataView.getUint32(80, true);
+        const vertices = new Float32Array(faces * 9);
+        const normals = new Float32Array(faces * 9);
+
+        let offset = 84;
+        for (let i = 0; i < faces; i++) {
+          const normalX = dataView.getFloat32(offset, true);
+          const normalY = dataView.getFloat32(offset + 4, true);
+          const normalZ = dataView.getFloat32(offset + 8, true);
+
+          for (let j = 0; j < 3; j++) {
+            const vertexOffset = offset + 12 + j * 12;
+            vertices[i * 9 + j * 3] = dataView.getFloat32(vertexOffset, true);
+            vertices[i * 9 + j * 3 + 1] = dataView.getFloat32(vertexOffset + 4, true);
+            vertices[i * 9 + j * 3 + 2] = dataView.getFloat32(vertexOffset + 8, true);
+
+            normals[i * 9 + j * 3] = normalX;
+            normals[i * 9 + j * 3 + 1] = normalY;
+            normals[i * 9 + j * 3 + 2] = normalZ;
+          }
+
+          offset += 50;
+        }
+
+        return { vertices, normals };
+      } else {
+        onError('WebGL Error: ASCII STL files are not supported.');
+        return null;
+      }
+    };
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const arrayBuffer = event.target.result;
+      const parsedData = parseSTL(arrayBuffer);
+
+      if (!parsedData) {
+        return;
+      }
+
+      const { vertices, normals } = parsedData;
+
+      const vertexBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+      const normalBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, normals, gl.STATIC_DRAW);
+
+      const modelViewMatrix = mat4.create();
+      const projectionMatrix = mat4.create();
+      mat4.perspective(projectionMatrix, 75 * Math.PI / 180, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+      mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -5]);
+
+      const animate = function() {
+        requestAnimationFrame(animate);
+        gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        mat4.identity(modelViewMatrix);
+        mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -5 * zoomLevel]);
+        mat4.rotateX(modelViewMatrix, modelViewMatrix, rotation.x);
+        mat4.rotateY(modelViewMatrix, modelViewMatrix, rotation.y);
+
+        gl.uniformMatrix4fv(uModelViewMatrix, false, modelViewMatrix);
+        gl.uniformMatrix4fv(uProjectionMatrix, false, projectionMatrix);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+        gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(aPosition);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+        gl.vertexAttribPointer(aNormal, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(aNormal);
+
+        gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 3);
+      };
+
+      animate();
     };
 
     reader.readAsArrayBuffer(file);

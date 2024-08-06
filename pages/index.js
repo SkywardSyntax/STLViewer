@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import STLRenderer from '../components/STLRenderer';
-import { debounce } from 'lodash';
 
 function Home() {
   const [file, setFile] = useState(null);
@@ -22,6 +21,14 @@ function Home() {
     } else {
       setError('An unexpected error occurred');
     }
+  };
+
+  const debounce = (func, wait) => {
+    let timeout;
+    return function(...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), wait);
+    };
   };
 
   const debouncedZoomChange = debounce((value) => {
