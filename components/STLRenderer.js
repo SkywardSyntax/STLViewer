@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { mat4 } from 'gl-matrix';
+import * as THREE from 'three';
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 
 function STLRenderer({ file, onError, zoomLevel }) {
   const canvasRef = useRef(null);
@@ -11,181 +12,35 @@ function STLRenderer({ file, onError, zoomLevel }) {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const gl = canvas.getContext('webgl');
+    const renderer = new THREE.WebGLRenderer({ canvas });
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+    camera.position.z = 5;
 
-    if (!gl) {
-      onError('WebGL Error: Unable to initialize WebGL. Your browser or device may not support it. This error can occur if your browser does not support WebGL or if there is an issue with the WebGL context creation.');
-      return;
-    }
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(1, 1, 1).normalize();
+    scene.add(light);
 
-    const vertexShaderSource = `
-      attribute vec3 aPosition;
-      attribute vec3 aNormal;
-      uniform mat4 uModelViewMatrix;
-      uniform mat4 uProjectionMatrix;
-      varying vec3 vNormal;
-      void main(void) {
-        gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aPosition, 1.0);
-        vNormal = aNormal;
-      }
-    `;
-
-    const fragmentShaderSource = `
-      precision mediump float;
-      varying vec3 vNormal;
-      void main(void) {
-        vec3 lightDirection = normalize(vec3(1.0, 1.0, 1.0));
-        float lightIntensity = max(dot(vNormal, lightDirection), 0.0);
-        gl_FragColor = vec4(vec3(0.5, 0.5, 0.5) * lightIntensity, 1.0);
-      }
-    `;
-
-    const loadShader = (type, source) => {
-      const shader = gl.createShader(type);
-      gl.shaderSource(shader, source);
-      gl.compileShader(shader);
-      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        onError(`WebGL Shader Compilation Error: ${gl.getShaderInfoLog(shader)}. This error can occur if there is a syntax error in the shader code or if the shader code is not supported by the WebGL implementation.`);
-        gl.deleteShader(shader);
-        return null;
-      }
-      return shader;
-    };
-
-    const vertexShader = loadShader(gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = loadShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
-
-    if (!vertexShader || !fragmentShader) {
-      return;
-    }
-
-    const shaderProgram = gl.createProgram();
-    gl.attachShader(shaderProgram, vertexShader);
-    gl.attachShader(shaderProgram, fragmentShader);
-    gl.linkProgram(shaderProgram);
-
-    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-      onError(`WebGL Program Linking Error: ${gl.getProgramInfoLog(shaderProgram)}. This error can occur if there is an issue with linking the vertex and fragment shaders, such as mismatched attribute or uniform names.`);
-      return;
-    }
-
-    gl.useProgram(shaderProgram);
-
-    const aPosition = gl.getAttribLocation(shaderProgram, 'aPosition');
-    const aNormal = gl.getAttribLocation(shaderProgram, 'aNormal');
-    const uModelViewMatrix = gl.getUniformLocation(shaderProgram, 'uModelViewMatrix');
-    const uProjectionMatrix = gl.getUniformLocation(shaderProgram, 'uProjectionMatrix');
-
-    const parseSTL = (arrayBuffer) => {
-      const dataView = new DataView(arrayBuffer);
-      const isBinary = () => {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-          const text = event.target.result;
-          return text.indexOf('solid') === 0;
-        };
-        reader.readAsText(new Blob([arrayBuffer]));
-      };
-
-      if (isBinary()) {
-        const faces = dataView.getUint32(80, true);
-        const vertices = new Float32Array(faces * 9);
-        const normals = new Float32Array(faces * 9);
-
-        let offset = 84;
-        for (let i = 0; i < faces; i++) {
-          const normalX = dataView.getFloat32(offset, true);
-          const normalY = dataView.getFloat32(offset + 4, true);
-          const normalZ = dataView.getFloat32(offset + 8, true);
-
-          for (let j = 0; j < 3; j++) {
-            const vertexOffset = offset + 12 + j * 12;
-            vertices[i * 9 + j * 3] = dataView.getFloat32(vertexOffset, true);
-            vertices[i * 9 + j * 3 + 1] = dataView.getFloat32(vertexOffset + 4, true);
-            vertices[i * 9 + j * 3 + 2] = dataView.getFloat32(vertexOffset + 8, true);
-
-            normals[i * 9 + j * 3] = normalX;
-            normals[i * 9 + j * 3 + 1] = normalY;
-            normals[i * 9 + j * 3 + 2] = normalZ;
-          }
-
-          offset += 50;
-        }
-
-        return { vertices, normals };
-      } else {
-        const textDecoder = new TextDecoder();
-        const text = textDecoder.decode(arrayBuffer);
-        const lines = text.split('\n');
-        const vertices = [];
-        const normals = [];
-        let normal = [0, 0, 0];
-
-        for (let line of lines) {
-          line = line.trim();
-          if (line.startsWith('facet normal')) {
-            const parts = line.split(' ');
-            normal = [parseFloat(parts[2]), parseFloat(parts[3]), parseFloat(parts[4])];
-          } else if (line.startsWith('vertex')) {
-            const parts = line.split(' ');
-            vertices.push(parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[3]));
-            normals.push(...normal);
-          }
-        }
-
-        return {
-          vertices: new Float32Array(vertices),
-          normals: new Float32Array(normals),
-        };
-      }
-    };
+    const loader = new STLLoader();
 
     const reader = new FileReader();
     reader.onload = function(event) {
       const arrayBuffer = event.target.result;
-      const parsedData = parseSTL(arrayBuffer);
+      const geometry = loader.parse(arrayBuffer);
 
-      if (!parsedData) {
+      if (!geometry) {
         return;
       }
 
-      const { vertices, normals } = parsedData;
-
-      const vertexBuffer = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-
-      const normalBuffer = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, normals, gl.STATIC_DRAW);
-
-      const modelViewMatrix = mat4.create();
-      const projectionMatrix = mat4.create();
-      mat4.perspective(projectionMatrix, 75 * Math.PI / 180, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-      mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -5]);
+      const material = new THREE.MeshLambertMaterial({ color: 0x7f7f7f });
+      const mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+      meshRef.current = mesh;
 
       const animate = function() {
         requestAnimationFrame(animate);
-        gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-        mat4.identity(modelViewMatrix);
-        mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -5 * zoomLevel]);
-        mat4.rotateX(modelViewMatrix, modelViewMatrix, rotation.x);
-        mat4.rotateY(modelViewMatrix, modelViewMatrix, rotation.y);
-
-        gl.uniformMatrix4fv(uModelViewMatrix, false, modelViewMatrix);
-        gl.uniformMatrix4fv(uProjectionMatrix, false, projectionMatrix);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-        gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(aPosition);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
-        gl.vertexAttribPointer(aNormal, 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(aNormal);
-
-        gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 3);
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        renderer.render(scene, camera);
       };
 
       animate();

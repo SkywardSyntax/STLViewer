@@ -7,8 +7,13 @@ function Home() {
   const [zoomLevel, setZoomLevel] = useState(1);
 
   const handleFileChange = (event) => {
-    setFile(event.target.files[0]);
-    setError(null);
+    const selectedFile = event.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setError(null);
+    } else {
+      setError('No file selected. Please select an STL file.');
+    }
   };
 
   const handleError = (error) => {
@@ -20,6 +25,8 @@ function Home() {
       setError(error.message);
     } else if (error.message && error.message.startsWith('STL Error:')) {
       setError(error.message);
+    } else if (error.message && error.message.startsWith('WebGL Context Error:')) {
+      setError('WebGL Context Error: There was an issue with the WebGL context. Please try again or use a different browser.');
     } else {
       setError(`An unexpected error occurred: ${error.message || error}`);
     }

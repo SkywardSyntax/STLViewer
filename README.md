@@ -14,7 +14,7 @@ npm run dev
 
 ## STL File Viewer
 
-This project allows you to upload an STL file and render it using the GPU with WebGL and custom functions.
+This project allows you to upload an STL file and render it using the GPU with Three.js.
 
 ### Instructions
 
@@ -38,7 +38,7 @@ This project allows you to upload an STL file and render it using the GPU with W
 
 5. Upload an STL file using the file input.
 
-6. The STL file will be rendered using WebGL and custom functions.
+6. The STL file will be rendered using Three.js.
 
 ### Error Handling
 
@@ -60,9 +60,9 @@ Out-of-bounds access errors can occur if the application tries to read data outs
 2. Check the file reading process for any potential issues.
 3. Ensure the STL file is in binary format, as ASCII STL files are not supported.
 
-#### WebGL Initialization Errors
+#### Three.js Initialization Errors
 
-If a WebGL initialization error occurs, it indicates that the browser or device does not support WebGL or there is an issue with the WebGL context creation. The application will display an error message indicating the WebGL initialization error.
+If a Three.js initialization error occurs, it indicates that the browser or device does not support WebGL or there is an issue with the WebGL context creation. The application will display an error message indicating the Three.js initialization error.
 
 **Resolution Steps:**
 1. Ensure that your browser supports WebGL. You can check this by visiting [WebGL Report](https://get.webgl.org/).
@@ -70,18 +70,18 @@ If a WebGL initialization error occurs, it indicates that the browser or device 
 3. Ensure that your graphics drivers are up to date.
 4. Try running the application on a different browser or device.
 
-#### WebGL Shader Compilation Errors
+#### Three.js Shader Compilation Errors
 
-If a WebGL shader compilation error occurs, it indicates that there is an issue with the shader code. The application will display an error message indicating the shader compilation error along with the specific error message from the WebGL context.
+If a Three.js shader compilation error occurs, it indicates that there is an issue with the shader code. The application will display an error message indicating the shader compilation error along with the specific error message from the WebGL context.
 
 **Resolution Steps:**
 1. Review the shader code for any syntax errors.
 2. Ensure that the shader code is compatible with the WebGL implementation.
 3. Check the specific error message from the WebGL context for more details.
 
-#### WebGL Program Linking Errors
+#### Three.js Program Linking Errors
 
-If a WebGL program linking error occurs, it indicates that there is an issue with linking the vertex and fragment shaders. The application will display an error message indicating the program linking error along with the specific error message from the WebGL context.
+If a Three.js program linking error occurs, it indicates that there is an issue with linking the vertex and fragment shaders. The application will display an error message indicating the program linking error along with the specific error message from the WebGL context.
 
 **Resolution Steps:**
 1. Ensure that the vertex and fragment shaders have matching attribute and uniform names.
@@ -97,9 +97,9 @@ If an STL parsing error occurs, it indicates that there is an issue with parsing
 2. Verify the integrity of the STL file. Ensure it is not corrupted.
 3. Check the file reading process for any potential issues.
 
-### Custom WebGL Functions
+### Three.js Functions
 
-This project uses custom WebGL functions to handle STL file parsing and rendering. The custom functions include:
+This project uses Three.js functions to handle STL file parsing and rendering. The functions include:
 
 - `parseSTL`: Parses the binary STL file and extracts vertices and normals.
 - `loadShader`: Loads and compiles a WebGL shader.
