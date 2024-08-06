@@ -26,6 +26,12 @@ input[type="file"] {
   margin: 20px 0;
 }
 
+input[type="range"] {
+  margin: 20px 0;
+  width: 100%;
+  max-width: 300px;
+}
+
 canvas {
   border: 1px solid #d1d1d1;
   margin-top: 20px;

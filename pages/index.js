@@ -4,6 +4,7 @@ import STLRenderer from '../components/STLRenderer';
 function Home() {
   const [file, setFile] = useState(null);
   const [error, setError] = useState(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
@@ -15,17 +16,24 @@ function Home() {
       setError('RangeError: Out of bounds access');
     } else if (error.message && error.message.startsWith('WebGL Error:')) {
       setError(error.message);
+    } else if (error.message && error.message.startsWith('Three.js Error:')) {
+      setError(error.message);
     } else {
       setError('An unexpected error occurred');
     }
+  };
+
+  const handleZoomChange = (event) => {
+    setZoomLevel(event.target.value);
   };
 
   return (
     <main>
       <h1>STL File Viewer</h1>
       <input type="file" accept=".stl" onChange={handleFileChange} />
+      <input type="range" min="0.1" max="2" step="0.1" value={zoomLevel} onChange={handleZoomChange} />
       {error && <p className="error">{error}</p>}
-      {file && <STLRenderer file={file} onError={handleError} />}
+      {file && <STLRenderer file={file} onError={handleError} zoomLevel={zoomLevel} />}
     </main>
   );
 }
