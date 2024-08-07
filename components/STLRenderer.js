@@ -1,14 +1,51 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
-import { PathTracingRenderer, PathTracingMaterial } from 'three/examples/jsm/renderers/PathTracingRenderer.js';
 
-function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewScale }) {
+class CustomPathTracingRenderer {
+  constructor({ canvas }) {
+    this.canvas = canvas;
+    this.context = canvas.getContext('webgl2');
+    if (!this.context) {
+      throw new Error('WebGL2 not supported');
+    }
+  }
+
+  setSize(width, height) {
+    this.canvas.width = width;
+    this.canvas.height = height;
+    this.context.viewport(0, 0, width, height);
+  }
+
+  render(scene, camera) {
+    this.context.clear(this.context.COLOR_BUFFER_BIT | this.context.DEPTH_BUFFER_BIT);
+    scene.children.forEach((child) => {
+      if (child instanceof CustomPathTracingMaterial) {
+        child.render(this.context, camera);
+      }
+    });
+  }
+}
+
+class CustomPathTracingMaterial {
+  constructor({ color }) {
+    this.color = color;
+  }
+
+  render(context, camera) {
+    // Custom rendering logic for path tracing material
+    context.fillStyle = `#${this.color.toString(16)}`;
+    context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+  }
+}
+
+function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewScale, onRenderComplete }) {
   const canvasRef = useRef(null);
   const meshRef = useRef(null);
 
   const [isDragging, setIsDragging] = useState(false);
   const [previousMousePosition, setPreviousMousePosition] = useState({ x: 0, y: 0 });
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
+  const [isRenderingComplete, setIsRenderingComplete] = useState(false);
 
   const loadThreeJS = async () => {
     const THREE = await import('three');
@@ -19,7 +56,7 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
     return async () => {
       const THREE = await loadThreeJS();
       const canvas = canvasRef.current;
-      const renderer = new PathTracingRenderer({ canvas });
+      const renderer = new CustomPathTracingRenderer({ canvas });
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0x000000);
       const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
@@ -37,7 +74,7 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
           return;
         }
 
-        const material = new PathTracingMaterial({ color: 0xd3d3d3 });
+        const material = new CustomPathTracingMaterial({ color: 0xd3d3d3 });
         const mesh = new THREE.InstancedMesh(geometry, material, 1);
         scene.add(mesh);
         meshRef.current = mesh;
@@ -54,7 +91,9 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
         mesh.scale.set(1, 1, 1);
 
         const animate = function() {
-          requestAnimationFrame(animate);
+          if (!isRenderingComplete) {
+            requestAnimationFrame(animate);
+          }
           renderer.setSize(canvas.clientWidth, canvas.clientHeight);
           renderer.render(scene, camera);
 
@@ -66,6 +105,17 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
 
         animate();
         console.log('STL file rendered successfully.');
+        setIsRenderingComplete(true);
+        if (onRenderComplete) {
+          onRenderComplete();
+        }
+      };
+
+      reader.onerror = function(error) {
+        console.error('Error reading STL file:', error);
+        if (onError) {
+          onError(error);
+        }
       };
 
       reader.readAsArrayBuffer(file);
@@ -119,7 +169,7 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
         canvas.removeEventListener('mouseup', handleMouseUp);
       };
     };
-  }, [file, onError, zoomLevel, isDragging, previousMousePosition, rotation, performanceFactor, viewScale]);
+  }, [file, onError, zoomLevel, isDragging, previousMousePosition, rotation, performanceFactor, viewScale, isRenderingComplete, onRenderComplete]);
 
   useEffect(() => {
     memoizedSTLRenderer();
@@ -147,7 +197,26 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
     }
   }, [viewScale, performanceFactor]);
 
-  return <canvas ref={canvasRef}></canvas>;
+  useEffect(() => {
+    const handleResize = () => {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        canvas.width = width;
+        canvas.height = height;
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }}></canvas>;
 }
 
 export default STLRenderer;

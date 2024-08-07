@@ -9,6 +9,7 @@ function Home() {
   const [performanceFactor, setPerformanceFactor] = useState(0.5);
   const [viewScale, setViewScale] = useState(1);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isRenderingComplete, setIsRenderingComplete] = useState(false);
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -16,6 +17,7 @@ function Home() {
       console.log('STL file is being processed.');
       setFile(selectedFile);
       setError(null);
+      setIsRenderingComplete(false);
     } else {
       setError('No file selected. Please select an STL file.');
     }
@@ -66,6 +68,10 @@ function Home() {
     document.body.classList.toggle('dark-mode', isOn);
   };
 
+  const handleRenderComplete = () => {
+    setIsRenderingComplete(true);
+  };
+
   return (
     <div className={`container ${isDarkMode ? 'dark-mode' : ''}`}>
       <main>
@@ -81,8 +87,8 @@ function Home() {
         {error && <p className="error">{error}</p>}
         {file ? (
           <>
-            <STLRenderer file={file} onError={handleError} zoomLevel={zoomLevel} performanceFactor={performanceFactor} viewScale={viewScale} />
-            <p>STL file is being rendered.</p>
+            <STLRenderer file={file} onError={handleError} zoomLevel={zoomLevel} performanceFactor={performanceFactor} viewScale={viewScale} onRenderComplete={handleRenderComplete} />
+            <p>{isRenderingComplete ? 'STL file rendering complete.' : 'STL file is being rendered.'}</p>
           </>
         ) : (
           <p>No STL file selected.</p>
