@@ -14,7 +14,7 @@ npm run dev
 
 ## STL File Viewer
 
-This project allows you to upload an STL file and render it using the GPU with Three.js.
+This project allows you to upload an STL file and render it using the GPU with custom WebGL2 rendering logic.
 
 ### Instructions
 
@@ -38,7 +38,7 @@ This project allows you to upload an STL file and render it using the GPU with T
 
 5. Upload an STL file using the file input.
 
-6. The STL file will be rendered using Three.js.
+6. The STL file will be rendered using custom WebGL2 rendering logic.
 
 ### Click and Drag Functionality
 
@@ -64,9 +64,9 @@ Out-of-bounds access errors can occur if the application tries to read data outs
 2. Check the file reading process for any potential issues.
 3. Ensure the STL file is in binary format, as ASCII STL files are not supported.
 
-#### Three.js Initialization Errors
+#### WebGL Initialization Errors
 
-If a Three.js initialization error occurs, it indicates that the browser or device does not support WebGL or there is an issue with the WebGL context creation. The application will display an error message indicating the Three.js initialization error.
+If a WebGL initialization error occurs, it indicates that the browser or device does not support WebGL or there is an issue with the WebGL context creation. The application will display an error message indicating the WebGL initialization error.
 
 **Resolution Steps:**
 1. Ensure that your browser supports WebGL. You can check this by visiting [WebGL Report](https://get.webgl.org/).
@@ -74,18 +74,18 @@ If a Three.js initialization error occurs, it indicates that the browser or devi
 3. Ensure that your graphics drivers are up to date.
 4. Try running the application on a different browser or device.
 
-#### Three.js Shader Compilation Errors
+#### WebGL Shader Compilation Errors
 
-If a Three.js shader compilation error occurs, it indicates that there is an issue with the shader code. The application will display an error message indicating the shader compilation error along with the specific error message from the WebGL context.
+If a WebGL shader compilation error occurs, it indicates that there is an issue with the shader code. The application will display an error message indicating the shader compilation error along with the specific error message from the WebGL context.
 
 **Resolution Steps:**
 1. Review the shader code for any syntax errors.
 2. Ensure that the shader code is compatible with the WebGL implementation.
 3. Check the specific error message from the WebGL context for more details.
 
-#### Three.js Program Linking Errors
+#### WebGL Program Linking Errors
 
-If a Three.js program linking error occurs, it indicates that there is an issue with linking the vertex and fragment shaders. The application will display an error message indicating the program linking error along with the specific error message from the WebGL context.
+If a WebGL program linking error occurs, it indicates that there is an issue with linking the vertex and fragment shaders. The application will display an error message indicating the program linking error along with the specific error message from the WebGL context.
 
 **Resolution Steps:**
 1. Ensure that the vertex and fragment shaders have matching attribute and uniform names.
@@ -100,14 +100,6 @@ If an STL parsing error occurs, it indicates that there is an issue with parsing
 1. Ensure that the STL file is in binary format, as ASCII STL files are not supported.
 2. Verify the integrity of the STL file. Ensure it is not corrupted.
 3. Check the file reading process for any potential issues.
-
-### Three.js Functions
-
-This project uses Three.js functions to handle STL file parsing and rendering. The functions include:
-
-- `parseSTL`: Parses the binary STL file and extracts vertices and normals.
-- `loadShader`: Loads and compiles a WebGL shader.
-- `animate`: Handles the animation loop for rendering the STL file.
 
 ### Optimizations
 
@@ -201,39 +193,3 @@ The `ToggleSwitch` component is a reusable UI element that allows users to toggl
 1. **Reusability**: The `ToggleSwitch` component can be reused in different parts of the application, promoting code reusability and consistency.
 2. **Customizability**: The component can be easily customized to fit the application's design and requirements.
 3. **User-Friendly**: The toggle switch provides a user-friendly way to enable or disable features, enhancing the overall user experience.
-
-### Advanced Rendering Algorithms
-
-The application now uses more sophisticated rendering algorithms like ray tracing and path tracing for improved visual quality.
-
-**Ray Tracing and Path Tracing Implementation:**
-
-1. **Ray Tracing**: Ray tracing is a rendering technique that simulates the way light interacts with objects in a scene. It traces the path of light rays as they travel through the scene, calculating reflections, refractions, and shadows to produce realistic images.
-
-2. **Path Tracing**: Path tracing is an extension of ray tracing that simulates the global illumination of a scene. It traces the paths of light rays as they bounce around the scene, capturing indirect lighting and producing highly realistic images with accurate lighting and shadows.
-
-**Integration with Three.js:**
-
-1. **THREE.RayTracingRenderer**: The application leverages `THREE.RayTracingRenderer` to implement ray tracing rendering. This renderer provides advanced ray tracing capabilities, allowing for realistic reflections, refractions, and shadows.
-
-2. **THREE.PathTracingMaterial**: The application uses `THREE.PathTracingMaterial` to implement path tracing rendering. This material captures the global illumination of the scene, producing highly realistic images with accurate lighting and shadows.
-
-**Benefits of Advanced Rendering Algorithms:**
-
-1. **Improved Visual Quality**: The use of ray tracing and path tracing techniques significantly improves the visual quality of the rendered STL files. The images produced are more realistic, with accurate lighting, reflections, and shadows.
-
-2. **Realistic Lighting and Shadows**: Ray tracing and path tracing techniques simulate the way light interacts with objects in a scene, resulting in realistic lighting and shadows. This enhances the overall visual appeal of the rendered STL files.
-
-3. **Accurate Reflections and Refractions**: Ray tracing accurately calculates reflections and refractions, producing realistic images with accurate reflections on shiny surfaces and refractions through transparent objects.
-
-4. **Global Illumination**: Path tracing captures the global illumination of a scene, simulating the indirect lighting that occurs when light bounces around the scene. This results in highly realistic images with accurate lighting and shadows.
-
-**Instructions for Using Advanced Rendering Algorithms:**
-
-1. Upload an STL file using the file input.
-2. The application will automatically use the advanced rendering algorithms to render the STL file.
-3. The rendered STL file will have improved visual quality with realistic lighting, reflections, and shadows.
-
-**Conclusion:**
-
-The integration of advanced rendering algorithms like ray tracing and path tracing in the application significantly enhances the visual quality of the rendered STL files. The use of `THREE.RayTracingRenderer` and `THREE.PathTracingMaterial` provides realistic lighting, reflections, and shadows, resulting in highly realistic images. These advanced rendering techniques offer numerous benefits, including improved visual quality, realistic lighting and shadows, accurate reflections and refractions, and global illumination. The application now provides a more immersive and visually appealing experience for users.

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
+import { mat4, vec3 } from 'gl-matrix';
 
 class CustomPathTracingRenderer {
   constructor({ canvas }) {
@@ -38,6 +38,64 @@ class CustomPathTracingMaterial {
   }
 }
 
+function parseSTL(arrayBuffer) {
+  const dataView = new DataView(arrayBuffer);
+  const isBinary = dataView.getUint32(80, true) > 0;
+  if (!isBinary) {
+    throw new Error('Only binary STL files are supported.');
+  }
+
+  const triangles = dataView.getUint32(80, true);
+  const vertices = [];
+  const normals = [];
+
+  let offset = 84;
+  for (let i = 0; i < triangles; i++) {
+    const normal = [
+      dataView.getFloat32(offset, true),
+      dataView.getFloat32(offset + 4, true),
+      dataView.getFloat32(offset + 8, true),
+    ];
+    normals.push(normal);
+
+    for (let j = 0; j < 3; j++) {
+      const vertex = [
+        dataView.getFloat32(offset + 12 + j * 12, true),
+        dataView.getFloat32(offset + 16 + j * 12, true),
+        dataView.getFloat32(offset + 20 + j * 12, true),
+      ];
+      vertices.push(vertex);
+    }
+
+    offset += 50;
+  }
+
+  return { vertices, normals };
+}
+
+function createShader(gl, type, source) {
+  const shader = gl.createShader(type);
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    throw new Error('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader));
+  }
+  return shader;
+}
+
+function createProgram(gl, vertexShaderSource, fragmentShaderSource) {
+  const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+  const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+  const program = gl.createProgram();
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    throw new Error('Unable to initialize the shader program: ' + gl.getProgramInfoLog(program));
+  }
+  return program;
+}
+
 function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewScale, onRenderComplete }) {
   const canvasRef = useRef(null);
   const meshRef = useRef(null);
@@ -47,59 +105,113 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
   const [isRenderingComplete, setIsRenderingComplete] = useState(false);
 
-  const loadThreeJS = async () => {
-    const THREE = await import('three');
-    return THREE;
-  };
-
   const memoizedSTLRenderer = useMemo(() => {
     return async () => {
-      const THREE = await loadThreeJS();
       const canvas = canvasRef.current;
-      const renderer = new CustomPathTracingRenderer({ canvas });
-      const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x000000);
-      const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-      camera.position.z = 5;
+      const gl = canvas.getContext('webgl2');
+      if (!gl) {
+        throw new Error('WebGL2 not supported');
+      }
 
-      const loader = new STLLoader();
+      const vertexShaderSource = `
+        attribute vec3 aVertexPosition;
+        attribute vec3 aVertexNormal;
+        uniform mat4 uModelViewMatrix;
+        uniform mat4 uProjectionMatrix;
+        varying highp vec3 vLighting;
+        void main(void) {
+          gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
+          highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
+          highp vec3 directionalLightColor = vec3(1, 1, 1);
+          highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+          highp float directional = max(dot(aVertexNormal, directionalVector), 0.0);
+          vLighting = ambientLight + (directionalLightColor * directional);
+        }
+      `;
+
+      const fragmentShaderSource = `
+        varying highp vec3 vLighting;
+        void main(void) {
+          gl_FragColor = vec4(vLighting, 1.0);
+        }
+      `;
+
+      const shaderProgram = createProgram(gl, vertexShaderSource, fragmentShaderSource);
+      const programInfo = {
+        program: shaderProgram,
+        attribLocations: {
+          vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+          vertexNormal: gl.getAttribLocation(shaderProgram, 'aVertexNormal'),
+        },
+        uniformLocations: {
+          projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
+          modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
+        },
+      };
 
       const reader = new FileReader();
       reader.onload = function(event) {
         const arrayBuffer = event.target.result;
-        const geometry = loader.parse(arrayBuffer);
+        const { vertices, normals } = parseSTL(arrayBuffer);
 
-        if (!geometry) {
-          console.error('Failed to parse STL file.');
-          return;
-        }
+        const vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), gl.STATIC_DRAW);
 
-        const material = new CustomPathTracingMaterial({ color: 0xd3d3d3 });
-        const mesh = new THREE.InstancedMesh(geometry, material, 1);
-        scene.add(mesh);
-        meshRef.current = mesh;
+        const normalBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals.flat()), gl.STATIC_DRAW);
 
-        // Optimization: Frustum Culling
-        mesh.frustumCulled = true;
+        const buffers = {
+          position: vertexBuffer,
+          normal: normalBuffer,
+        };
 
-        // Optimization: Level of Detail (LOD)
-        const lod = new THREE.LOD();
-        lod.addLevel(mesh, 0);
-        scene.add(lod);
+        const scene = {
+          children: [
+            {
+              buffers,
+              vertexCount: vertices.length,
+              render: (gl, programInfo, projectionMatrix, modelViewMatrix) => {
+                gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+                gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 3, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
 
-        // Initialize mesh scale to a more appropriate value
-        mesh.scale.set(1, 1, 1);
+                gl.bindBuffer(gl.ARRAY_BUFFER, buffers.normal);
+                gl.vertexAttribPointer(programInfo.attribLocations.vertexNormal, 3, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(programInfo.attribLocations.vertexNormal);
+
+                gl.useProgram(programInfo.program);
+                gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
+                gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
+
+                gl.drawArrays(gl.TRIANGLES, 0, buffers.vertexCount);
+              },
+            },
+          ],
+        };
+
+        const camera = {
+          position: vec3.fromValues(0, 0, 5),
+          projectionMatrix: mat4.create(),
+          modelViewMatrix: mat4.create(),
+        };
+
+        mat4.perspective(camera.projectionMatrix, 45 * Math.PI / 180, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+        mat4.translate(camera.modelViewMatrix, camera.modelViewMatrix, camera.position);
 
         const animate = function() {
           if (!isRenderingComplete) {
             requestAnimationFrame(animate);
           }
-          renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-          renderer.render(scene, camera);
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+          scene.children.forEach((child) => {
+            child.render(gl, programInfo, camera.projectionMatrix, camera.modelViewMatrix);
+          });
 
           if (meshRef.current) {
-            meshRef.current.rotation.x = rotation.x;
-            meshRef.current.rotation.y = rotation.y;
+            mat4.rotateX(camera.modelViewMatrix, camera.modelViewMatrix, rotation.x);
+            mat4.rotateY(camera.modelViewMatrix, camera.modelViewMatrix, rotation.y);
           }
         };
 
@@ -147,12 +259,10 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
 
       const handleResize = () => {
         const canvas = canvasRef.current;
-        if (canvas && renderer && camera) {
+        if (canvas && gl) {
           const width = canvas.clientWidth * viewScale;
           const height = canvas.clientHeight * viewScale;
-          renderer.setSize(width, height);
-          camera.aspect = width / height;
-          camera.updateProjectionMatrix();
+          gl.viewport(0, 0, width, height);
         }
       };
 
@@ -177,15 +287,15 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
 
   useEffect(() => {
     if (meshRef.current) {
-      meshRef.current.rotation.x = rotation.x;
-      meshRef.current.rotation.y = rotation.y;
+      mat4.rotateX(meshRef.current.modelViewMatrix, meshRef.current.modelViewMatrix, rotation.x);
+      mat4.rotateY(meshRef.current.modelViewMatrix, meshRef.current.modelViewMatrix, rotation.y);
     }
   }, [rotation]);
 
   useEffect(() => {
     if (meshRef.current) {
       const scale = Math.pow(2, zoomLevel / 10);
-      meshRef.current.scale.set(scale, scale, scale);
+      mat4.scale(meshRef.current.modelViewMatrix, meshRef.current.modelViewMatrix, [scale, scale, scale]);
     }
   }, [zoomLevel]);
 
@@ -201,8 +311,8 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
     const handleResize = () => {
       const canvas = canvasRef.current;
       if (canvas) {
-        const width = canvas.clientWidth;
-        const height = canvas.clientHeight;
+        const width = canvas.clientWidth * viewScale;
+        const height = canvas.clientHeight * viewScale;
         canvas.width = width;
         canvas.height = height;
       }
@@ -214,7 +324,7 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [viewScale]);
 
   return <canvas ref={canvasRef} style={{ width: '800px', height: '600px' }}></canvas>;
 }

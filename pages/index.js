@@ -78,6 +78,14 @@ function Home() {
     }
   }, [file]);
 
+  useEffect(() => {
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      canvas.width = canvas.clientWidth * viewScale;
+      canvas.height = canvas.clientHeight * viewScale;
+    }
+  }, [viewScale]);
+
   return (
     <div className={`container ${isDarkMode ? 'dark-mode' : ''}`}>
       <main>
