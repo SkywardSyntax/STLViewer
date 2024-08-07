@@ -35,8 +35,8 @@ input[type="range"] {
 canvas {
   border: 1px solid #d1d1d1;
   margin-top: 20px;
-  width: 100%;
-  height: auto;
+  width: 400px;
+  height: 300px;
   display: block;
   background-color: #f0f0f0; /* Ensure the canvas element has a background color */
 }

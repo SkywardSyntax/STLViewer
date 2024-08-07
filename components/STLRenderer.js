@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 
-function STLRenderer({ file, onError, zoomLevel }) {
+function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5 }) {
   const canvasRef = useRef(null);
   const meshRef = useRef(null);
 
@@ -37,9 +37,17 @@ function STLRenderer({ file, onError, zoomLevel }) {
       scene.add(mesh);
       meshRef.current = mesh;
 
+      // Optimization: Frustum Culling
+      mesh.frustumCulled = true;
+
+      // Optimization: Level of Detail (LOD)
+      const lod = new THREE.LOD();
+      lod.addLevel(mesh, 0);
+      scene.add(lod);
+
       const animate = function() {
         requestAnimationFrame(animate);
-        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        renderer.setSize(canvas.clientWidth * performanceFactor, canvas.clientHeight * performanceFactor);
         renderer.render(scene, camera);
 
         if (meshRef.current) {
@@ -87,7 +95,7 @@ function STLRenderer({ file, onError, zoomLevel }) {
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [file, onError, zoomLevel, isDragging, previousMousePosition, rotation]);
+  }, [file, onError, zoomLevel, isDragging, previousMousePosition, rotation, performanceFactor]);
 
   useEffect(() => {
     if (meshRef.current) {
@@ -103,7 +111,7 @@ function STLRenderer({ file, onError, zoomLevel }) {
     }
   }, [zoomLevel]);
 
-  return <canvas ref={canvasRef} width="800" height="600"></canvas>;
+  return <canvas ref={canvasRef} width={400 * performanceFactor} height={300 * performanceFactor}></canvas>;
 }
 
 export default STLRenderer;

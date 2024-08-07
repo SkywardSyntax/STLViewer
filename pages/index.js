@@ -5,6 +5,7 @@ function Home() {
   const [file, setFile] = useState(null);
   const [error, setError] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [performanceFactor, setPerformanceFactor] = useState(0.5);
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -54,7 +55,7 @@ function Home() {
       <input type="file" accept=".stl" onChange={handleFileChange} />
       <input type="range" min="0.1" max="10" step="0.1" value={zoomLevel} onChange={handleZoomChange} />
       {error && <p className="error">{error}</p>}
-      {file && <STLRenderer file={file} onError={handleError} zoomLevel={zoomLevel} />}
+      {file && <STLRenderer file={file} onError={handleError} zoomLevel={zoomLevel} performanceFactor={performanceFactor} />}
     </main>
   );
 }
