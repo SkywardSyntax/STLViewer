@@ -23,10 +23,6 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
       const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
       camera.position.z = 5;
 
-      const light = new THREE.DirectionalLight(0xffffff, 1);
-      light.position.set(1, 1, 1).normalize();
-      scene.add(light);
-
       const loader = new STLLoader();
 
       const reader = new FileReader();
@@ -38,7 +34,7 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
           return;
         }
 
-        const material = new THREE.MeshLambertMaterial({ color: 0x7f7f7f });
+        const material = new THREE.MeshBasicMaterial({ color: 0x7f7f7f });
         const mesh = new THREE.InstancedMesh(geometry, material, 1);
         scene.add(mesh);
         meshRef.current = mesh;
@@ -98,8 +94,8 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
       const handleResize = () => {
         const canvas = canvasRef.current;
         if (canvas && renderer && camera) {
-          const width = canvas.clientWidth;
-          const height = canvas.clientHeight;
+          const width = canvas.clientWidth * viewScale;
+          const height = canvas.clientHeight * viewScale;
           renderer.setSize(width, height);
           camera.aspect = width / height;
           camera.updateProjectionMatrix();
@@ -119,7 +115,7 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
         canvas.removeEventListener('mouseup', handleMouseUp);
       };
     };
-  }, [file, onError, zoomLevel, isDragging, previousMousePosition, rotation, performanceFactor]);
+  }, [file, onError, zoomLevel, isDragging, previousMousePosition, rotation, performanceFactor, viewScale]);
 
   useEffect(() => {
     memoizedSTLRenderer();

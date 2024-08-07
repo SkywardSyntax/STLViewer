@@ -155,3 +155,49 @@ The application now includes chunking logic for STL rendering, which processes a
 1. **Improved Rendering Performance**: The chunking logic processes and renders the STL file in smaller chunks, reducing the load on the main thread and improving the overall rendering performance.
 2. **Smoother Visualization**: By rendering the STL file in chunks every frame, the application provides a smoother visualization experience, especially for large STL files.
 3. **Efficient Resource Utilization**: The chunking logic ensures efficient utilization of system resources, including CPU and GPU, leading to better overall performance.
+
+### Dark Mode Feature
+
+The application now includes a dark mode feature that allows users to switch between light and dark themes. This feature enhances the user experience, especially in low-light environments.
+
+**Instructions for Enabling Dark Mode:**
+
+1. Locate the toggle switch on the application interface.
+2. Click the toggle switch to enable dark mode. The application will switch to a dark theme.
+3. Click the toggle switch again to disable dark mode and switch back to the light theme.
+
+**Benefits of Dark Mode:**
+
+1. **Reduced Eye Strain**: Dark mode reduces eye strain, especially in low-light environments, making it more comfortable to use the application for extended periods.
+2. **Improved Battery Life**: On devices with OLED or AMOLED screens, dark mode can help save battery life by reducing the amount of power needed to display dark pixels.
+3. **Enhanced Visual Appeal**: Dark mode provides a sleek and modern look to the application, enhancing its visual appeal.
+
+### ToggleSwitch Component
+
+The `ToggleSwitch` component is a reusable UI element that allows users to toggle between two states, such as enabling or disabling dark mode.
+
+**Usage Instructions:**
+
+1. Import the `ToggleSwitch` component into your desired file:
+   ```javascript
+   import ToggleSwitch from '../components/ToggleSwitch';
+   ```
+
+2. Use the `ToggleSwitch` component in your JSX code:
+   ```jsx
+   <ToggleSwitch onToggle={handleDarkModeToggle} />
+   ```
+
+3. Implement the `handleDarkModeToggle` function to handle the toggle state change:
+   ```javascript
+   const handleDarkModeToggle = (isOn) => {
+     setIsDarkMode(isOn);
+     document.body.classList.toggle('dark-mode', isOn);
+   };
+   ```
+
+**Benefits of the ToggleSwitch Component:**
+
+1. **Reusability**: The `ToggleSwitch` component can be reused in different parts of the application, promoting code reusability and consistency.
+2. **Customizability**: The component can be easily customized to fit the application's design and requirements.
+3. **User-Friendly**: The toggle switch provides a user-friendly way to enable or disable features, enhancing the overall user experience.

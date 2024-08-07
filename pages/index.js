@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import STLRenderer from '../components/STLRenderer';
+import ToggleSwitch from '../components/ToggleSwitch';
 
 function Home() {
   const [file, setFile] = useState(null);
@@ -7,6 +8,7 @@ function Home() {
   const [zoomLevel, setZoomLevel] = useState(0);
   const [performanceFactor, setPerformanceFactor] = useState(0.5);
   const [viewScale, setViewScale] = useState(1);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -58,14 +60,23 @@ function Home() {
     setPerformanceFactor(event.target.value);
   };
 
+  const handleDarkModeToggle = (isOn) => {
+    setIsDarkMode(isOn);
+    document.body.classList.toggle('dark-mode', isOn);
+  };
+
   return (
-    <div className="container">
+    <div className={`container ${isDarkMode ? 'dark-mode' : ''}`}>
       <main>
         <h1>STL File Viewer</h1>
+        <ToggleSwitch onToggle={handleDarkModeToggle} />
         <input type="file" accept=".stl" onChange={handleFileChange} />
-        <input type="range" min="-100" max="100" step="1" value={zoomLevel} onChange={handleZoomChange} />
-        <input type="range" min="0.1" max="2" step="0.1" value={viewScale} onChange={handleViewScaleChange} />
-        <input type="range" min="0.1" max="1" step="0.1" value={performanceFactor} onChange={handlePerformanceFactorChange} />
+        <label htmlFor="zoomLevel">Zoom Level</label>
+        <input type="range" id="zoomLevel" min="-100" max="100" step="1" value={zoomLevel} onChange={handleZoomChange} />
+        <label htmlFor="viewScale">View Scale</label>
+        <input type="range" id="viewScale" min="0.1" max="2" step="0.1" value={viewScale} onChange={handleViewScaleChange} />
+        <label htmlFor="performanceFactor">Performance Factor</label>
+        <input type="range" id="performanceFactor" min="0.1" max="1" step="0.1" value={performanceFactor} onChange={handlePerformanceFactorChange} />
         {error && <p className="error">{error}</p>}
         {file && <STLRenderer file={file} onError={handleError} zoomLevel={zoomLevel} performanceFactor={performanceFactor} viewScale={viewScale} />}
       </main>
