@@ -47,11 +47,15 @@ function Home() {
   }, 100);
 
   const handleZoomChange = (event) => {
-    debouncedZoomChange(event.target.value);
+    setZoomLevel(event.target.value);
   };
 
   const handleViewScaleChange = (event) => {
     setViewScale(event.target.value);
+  };
+
+  const handlePerformanceFactorChange = (event) => {
+    setPerformanceFactor(event.target.value);
   };
 
   return (
@@ -61,6 +65,7 @@ function Home() {
         <input type="file" accept=".stl" onChange={handleFileChange} />
         <input type="range" min="-100" max="100" step="1" value={zoomLevel} onChange={handleZoomChange} />
         <input type="range" min="0.1" max="2" step="0.1" value={viewScale} onChange={handleViewScaleChange} />
+        <input type="range" min="0.1" max="1" step="0.1" value={performanceFactor} onChange={handlePerformanceFactorChange} />
         {error && <p className="error">{error}</p>}
         {file && <STLRenderer file={file} onError={handleError} zoomLevel={zoomLevel} performanceFactor={performanceFactor} viewScale={viewScale} />}
       </main>
