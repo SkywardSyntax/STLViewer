@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 
-function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5 }) {
+function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewScale }) {
   const canvasRef = useRef(null);
   const meshRef = useRef(null);
 
@@ -45,9 +45,12 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5 }) {
       lod.addLevel(mesh, 0);
       scene.add(lod);
 
+      // Initialize mesh scale to a more appropriate value
+      mesh.scale.set(1, 1, 1);
+
       const animate = function() {
         requestAnimationFrame(animate);
-        renderer.setSize(canvas.clientWidth * performanceFactor, canvas.clientHeight * performanceFactor);
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
         renderer.render(scene, camera);
 
         if (meshRef.current) {
@@ -86,11 +89,25 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5 }) {
       setIsDragging(false);
     };
 
+    const handleResize = () => {
+      const canvas = canvasRef.current;
+      if (canvas && renderer && camera) {
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        renderer.setSize(width, height);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
     canvas.addEventListener('mousedown', handleMouseDown);
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('mouseup', handleMouseUp);
 
     return () => {
+      window.removeEventListener('resize', handleResize);
       canvas.removeEventListener('mousedown', handleMouseDown);
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mouseup', handleMouseUp);
@@ -106,12 +123,20 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5 }) {
 
   useEffect(() => {
     if (meshRef.current) {
-      const scale = Math.pow(10, zoomLevel / 100);
+      const scale = Math.pow(2, zoomLevel / 10);
       meshRef.current.scale.set(scale, scale, scale);
     }
   }, [zoomLevel]);
 
-  return <canvas ref={canvasRef} width={400 * performanceFactor} height={300 * performanceFactor}></canvas>;
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      canvas.width = 400 * performanceFactor * viewScale;
+      canvas.height = 300 * performanceFactor * viewScale;
+    }
+  }, [viewScale, performanceFactor]);
+
+  return <canvas ref={canvasRef}></canvas>;
 }
 
 export default STLRenderer;

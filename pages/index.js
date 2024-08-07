@@ -4,8 +4,9 @@ import STLRenderer from '../components/STLRenderer';
 function Home() {
   const [file, setFile] = useState(null);
   const [error, setError] = useState(null);
-  const [zoomLevel, setZoomLevel] = useState(1);
+  const [zoomLevel, setZoomLevel] = useState(0);
   const [performanceFactor, setPerformanceFactor] = useState(0.5);
+  const [viewScale, setViewScale] = useState(1);
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -49,14 +50,21 @@ function Home() {
     debouncedZoomChange(event.target.value);
   };
 
+  const handleViewScaleChange = (event) => {
+    setViewScale(event.target.value);
+  };
+
   return (
-    <main>
-      <h1>STL File Viewer</h1>
-      <input type="file" accept=".stl" onChange={handleFileChange} />
-      <input type="range" min="0.1" max="10" step="0.1" value={zoomLevel} onChange={handleZoomChange} />
-      {error && <p className="error">{error}</p>}
-      {file && <STLRenderer file={file} onError={handleError} zoomLevel={zoomLevel} performanceFactor={performanceFactor} />}
-    </main>
+    <div className="container">
+      <main>
+        <h1>STL File Viewer</h1>
+        <input type="file" accept=".stl" onChange={handleFileChange} />
+        <input type="range" min="-100" max="100" step="1" value={zoomLevel} onChange={handleZoomChange} />
+        <input type="range" min="0.1" max="2" step="0.1" value={viewScale} onChange={handleViewScaleChange} />
+        {error && <p className="error">{error}</p>}
+        {file && <STLRenderer file={file} onError={handleError} zoomLevel={zoomLevel} performanceFactor={performanceFactor} viewScale={viewScale} />}
+      </main>
+    </div>
   );
 }
 
