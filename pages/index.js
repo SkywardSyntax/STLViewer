@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import STLRenderer from '../components/STLRenderer';
 import ToggleSwitch from '../components/ToggleSwitch';
 
@@ -52,7 +52,7 @@ function Home() {
   }, 100);
 
   const handleZoomChange = (event) => {
-    setZoomLevel(event.target.value);
+    debouncedZoomChange(event.target.value);
   };
 
   const handleViewScaleChange = (event) => {
@@ -71,6 +71,12 @@ function Home() {
   const handleRenderComplete = () => {
     setIsRenderingComplete(true);
   };
+
+  useEffect(() => {
+    if (file) {
+      setIsRenderingComplete(false);
+    }
+  }, [file]);
 
   return (
     <div className={`container ${isDarkMode ? 'dark-mode' : ''}`}>

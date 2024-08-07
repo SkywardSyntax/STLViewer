@@ -41,12 +41,12 @@ input[type="range"] {
 
 canvas {
   border: 2px solid #ffffff; /* White border for better visibility */
-  margin-top: 20px;
-  display: block;
   background-color: #000000; /* Black background color for canvas */
   background: rgba(255, 255, 255, 0.1); /* Frosted glass effect */
   backdrop-filter: blur(10px); /* Frosted glass effect */
   border-radius: 10px; /* Rounded corners for frosted glass effect */
+  width: 100%;
+  height: auto;
 }
 
 .error {

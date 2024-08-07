@@ -192,8 +192,8 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
-      canvas.width = 400 * performanceFactor * viewScale;
-      canvas.height = 300 * performanceFactor * viewScale;
+      canvas.width = canvas.clientWidth * performanceFactor * viewScale;
+      canvas.height = canvas.clientHeight * performanceFactor * viewScale;
     }
   }, [viewScale, performanceFactor]);
 
@@ -216,7 +216,7 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
     };
   }, []);
 
-  return <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }}></canvas>;
+  return <canvas ref={canvasRef} style={{ width: '800px', height: '600px' }}></canvas>;
 }
 
 export default STLRenderer;
