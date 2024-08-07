@@ -139,3 +139,19 @@ The application now includes a performance factor slider that allows users to dy
 2. **Reduced Main Thread Load**: By offloading heavy computations to Web Workers, the main thread remains responsive, resulting in a smoother user experience.
 3. **Dynamic Performance Adjustment**: The performance factor slider allows users to dynamically adjust the performance settings based on their preferences and device capabilities.
 4. **Efficient Resource Utilization**: The optimizations ensure efficient utilization of system resources, including CPU and GPU, leading to better overall performance.
+
+### Chunking Logic for STL Rendering
+
+The application now includes chunking logic for STL rendering, which processes and renders the STL file in chunks every frame. This approach improves the rendering performance and allows for smoother visualization of large STL files.
+
+**Instructions for Using the Chunking Logic:**
+
+1. Upload an STL file using the file input.
+2. The application will automatically process and render the STL file in chunks every frame.
+3. The chunking logic ensures that the rendering process remains responsive and efficient, even for large STL files.
+
+**Benefits of the Chunking Logic:**
+
+1. **Improved Rendering Performance**: The chunking logic processes and renders the STL file in smaller chunks, reducing the load on the main thread and improving the overall rendering performance.
+2. **Smoother Visualization**: By rendering the STL file in chunks every frame, the application provides a smoother visualization experience, especially for large STL files.
+3. **Efficient Resource Utilization**: The chunking logic ensures efficient utilization of system resources, including CPU and GPU, leading to better overall performance.
