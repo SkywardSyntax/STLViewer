@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
+import { PathTracingRenderer, PathTracingMaterial } from 'three/examples/jsm/renderers/PathTracingRenderer.js';
 
 function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewScale }) {
   const canvasRef = useRef(null);
@@ -18,8 +19,9 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
     return async () => {
       const THREE = await loadThreeJS();
       const canvas = canvasRef.current;
-      const renderer = new THREE.WebGLRenderer({ canvas });
+      const renderer = new PathTracingRenderer({ canvas });
       const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x000000);
       const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
       camera.position.z = 5;
 
@@ -31,10 +33,11 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
         const geometry = loader.parse(arrayBuffer);
 
         if (!geometry) {
+          console.error('Failed to parse STL file.');
           return;
         }
 
-        const material = new THREE.MeshBasicMaterial({ color: 0x7f7f7f });
+        const material = new PathTracingMaterial({ color: 0xd3d3d3 });
         const mesh = new THREE.InstancedMesh(geometry, material, 1);
         scene.add(mesh);
         meshRef.current = mesh;
@@ -62,6 +65,7 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
         };
 
         animate();
+        console.log('STL file rendered successfully.');
       };
 
       reader.readAsArrayBuffer(file);

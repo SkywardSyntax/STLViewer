@@ -13,6 +13,7 @@ function Home() {
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     if (selectedFile) {
+      console.log('STL file is being processed.');
       setFile(selectedFile);
       setError(null);
     } else {
@@ -78,7 +79,14 @@ function Home() {
         <label htmlFor="performanceFactor">Performance Factor</label>
         <input type="range" id="performanceFactor" min="0.1" max="1" step="0.1" value={performanceFactor} onChange={handlePerformanceFactorChange} />
         {error && <p className="error">{error}</p>}
-        {file && <STLRenderer file={file} onError={handleError} zoomLevel={zoomLevel} performanceFactor={performanceFactor} viewScale={viewScale} />}
+        {file ? (
+          <>
+            <STLRenderer file={file} onError={handleError} zoomLevel={zoomLevel} performanceFactor={performanceFactor} viewScale={viewScale} />
+            <p>STL file is being rendered.</p>
+          </>
+        ) : (
+          <p>No STL file selected.</p>
+        )}
       </main>
     </div>
   );

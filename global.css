@@ -43,7 +43,7 @@ canvas {
   border: 1px solid #d1d1d1;
   margin-top: 20px;
   display: block;
-  background-color: #1e1e1e; /* Dark background color for canvas */
+  background-color: #000000; /* Black background color for canvas */
   background: rgba(255, 255, 255, 0.1); /* Frosted glass effect */
   backdrop-filter: blur(10px); /* Frosted glass effect */
   border-radius: 10px; /* Rounded corners for frosted glass effect */
@@ -105,7 +105,7 @@ label {
 }
 
 .dark-mode canvas {
-  background-color: #1e1e1e;
+  background-color: #000000;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   border-radius: 10px;

@@ -201,3 +201,39 @@ The `ToggleSwitch` component is a reusable UI element that allows users to toggl
 1. **Reusability**: The `ToggleSwitch` component can be reused in different parts of the application, promoting code reusability and consistency.
 2. **Customizability**: The component can be easily customized to fit the application's design and requirements.
 3. **User-Friendly**: The toggle switch provides a user-friendly way to enable or disable features, enhancing the overall user experience.
+
+### Advanced Rendering Algorithms
+
+The application now uses more sophisticated rendering algorithms like ray tracing and path tracing for improved visual quality.
+
+**Ray Tracing and Path Tracing Implementation:**
+
+1. **Ray Tracing**: Ray tracing is a rendering technique that simulates the way light interacts with objects in a scene. It traces the path of light rays as they travel through the scene, calculating reflections, refractions, and shadows to produce realistic images.
+
+2. **Path Tracing**: Path tracing is an extension of ray tracing that simulates the global illumination of a scene. It traces the paths of light rays as they bounce around the scene, capturing indirect lighting and producing highly realistic images with accurate lighting and shadows.
+
+**Integration with Three.js:**
+
+1. **THREE.RayTracingRenderer**: The application leverages `THREE.RayTracingRenderer` to implement ray tracing rendering. This renderer provides advanced ray tracing capabilities, allowing for realistic reflections, refractions, and shadows.
+
+2. **THREE.PathTracingMaterial**: The application uses `THREE.PathTracingMaterial` to implement path tracing rendering. This material captures the global illumination of the scene, producing highly realistic images with accurate lighting and shadows.
+
+**Benefits of Advanced Rendering Algorithms:**
+
+1. **Improved Visual Quality**: The use of ray tracing and path tracing techniques significantly improves the visual quality of the rendered STL files. The images produced are more realistic, with accurate lighting, reflections, and shadows.
+
+2. **Realistic Lighting and Shadows**: Ray tracing and path tracing techniques simulate the way light interacts with objects in a scene, resulting in realistic lighting and shadows. This enhances the overall visual appeal of the rendered STL files.
+
+3. **Accurate Reflections and Refractions**: Ray tracing accurately calculates reflections and refractions, producing realistic images with accurate reflections on shiny surfaces and refractions through transparent objects.
+
+4. **Global Illumination**: Path tracing captures the global illumination of a scene, simulating the indirect lighting that occurs when light bounces around the scene. This results in highly realistic images with accurate lighting and shadows.
+
+**Instructions for Using Advanced Rendering Algorithms:**
+
+1. Upload an STL file using the file input.
+2. The application will automatically use the advanced rendering algorithms to render the STL file.
+3. The rendered STL file will have improved visual quality with realistic lighting, reflections, and shadows.
+
+**Conclusion:**
+
+The integration of advanced rendering algorithms like ray tracing and path tracing in the application significantly enhances the visual quality of the rendered STL files. The use of `THREE.RayTracingRenderer` and `THREE.PathTracingMaterial` provides realistic lighting, reflections, and shadows, resulting in highly realistic images. These advanced rendering techniques offer numerous benefits, including improved visual quality, realistic lighting and shadows, accurate reflections and refractions, and global illumination. The application now provides a more immersive and visually appealing experience for users.
