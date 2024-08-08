@@ -38,6 +38,8 @@ function Home() {
       setError('Buffer Length Error: The buffer length is incorrect. This can occur if the glTF file is malformed or if there is an issue with the file reading process.');
     } else if (error.message && error.message.startsWith('Malformed glTF Error:')) {
       setError('Malformed glTF Error: The glTF file is malformed. Please check the file and try again.');
+    } else if (error.message && error.message.startsWith('Buffer Length Out of Range:')) {
+      setError('Buffer Length Out of Range: The buffer length is out of range. This can occur if the glTF file is malformed or if there is an issue with the file reading process.');
     } else {
       setError(`An unexpected error occurred: ${error.message || error}`);
     }

@@ -42,15 +42,15 @@ function parseGLTF(arrayBuffer) {
   const dataView = new DataView(arrayBuffer);
   const jsonChunkLength = dataView.getUint32(12, true);
   if (arrayBuffer.byteLength < 20 + jsonChunkLength) {
-    throw new RangeError('Length out of range of buffer');
+    throw new RangeError('Length out of range of buffer. This error can occur if the glTF file is malformed or if there is an issue with the file reading process.');
   }
   const jsonChunkData = new Uint8Array(arrayBuffer, 20, jsonChunkLength);
   const jsonString = new TextDecoder().decode(jsonChunkData);
   const gltf = JSON.parse(jsonString);
 
-  const bufferViews = gltf.bufferViews;
-  const accessors = gltf.accessors;
-  const meshes = gltf.meshes;
+  const bufferViews = gltf.bufferViews || [];
+  const accessors = gltf.accessors || [];
+  const meshes = gltf.meshes || [];
 
   const vertices = [];
   const indices = [];
@@ -60,14 +60,22 @@ function parseGLTF(arrayBuffer) {
       const positionAccessor = accessors[primitive.attributes.POSITION];
       const indexAccessor = accessors[primitive.indices];
 
+      if (!positionAccessor || !indexAccessor) {
+        throw new Error('Missing required accessors in glTF file.');
+      }
+
       const positionBufferView = bufferViews[positionAccessor.bufferView];
       const indexBufferView = bufferViews[indexAccessor.bufferView];
 
+      if (!positionBufferView || !indexBufferView) {
+        throw new Error('Missing required buffer views in glTF file.');
+      }
+
       if (arrayBuffer.byteLength < positionBufferView.byteOffset + positionAccessor.count * 3 * 4) {
-        throw new RangeError('Length out of range of buffer');
+        throw new RangeError('Length out of range of buffer. This error can occur if the glTF file is malformed or if there is an issue with the file reading process.');
       }
       if (arrayBuffer.byteLength < indexBufferView.byteOffset + indexAccessor.count * 2) {
-        throw new RangeError('Length out of range of buffer');
+        throw new RangeError('Length out of range of buffer. This error can occur if the glTF file is malformed or if there is an issue with the file reading process.');
       }
 
       const positionData = new Float32Array(arrayBuffer, positionBufferView.byteOffset, positionAccessor.count * 3);
@@ -166,6 +174,9 @@ function GLTFRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewS
       const reader = new FileReader();
       reader.onload = function(event) {
         const arrayBuffer = event.target.result;
+        if (arrayBuffer.byteLength < 20) {
+          throw new RangeError('Length out of range of buffer. This error can occur if the glTF file is malformed or if there is an issue with the file reading process.');
+        }
         try {
           const { vertices, indices } = parseGLTF(arrayBuffer);
 
