@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { mat4, vec3 } from 'gl-matrix';
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 class CustomPathTracingRenderer {
   constructor({ canvas }) {
@@ -40,11 +38,64 @@ class CustomPathTracingMaterial {
   }
 }
 
+function parseGLTF(arrayBuffer) {
+  const dataView = new DataView(arrayBuffer);
+  const jsonChunkLength = dataView.getUint32(12, true);
+  const jsonChunkData = new Uint8Array(arrayBuffer, 20, jsonChunkLength);
+  const jsonString = new TextDecoder().decode(jsonChunkData);
+  const gltf = JSON.parse(jsonString);
+
+  const bufferViews = gltf.bufferViews;
+  const accessors = gltf.accessors;
+  const meshes = gltf.meshes;
+
+  const vertices = [];
+  const indices = [];
+
+  meshes.forEach((mesh) => {
+    mesh.primitives.forEach((primitive) => {
+      const positionAccessor = accessors[primitive.attributes.POSITION];
+      const indexAccessor = accessors[primitive.indices];
+
+      const positionBufferView = bufferViews[positionAccessor.bufferView];
+      const indexBufferView = bufferViews[indexAccessor.bufferView];
+
+      const positionData = new Float32Array(arrayBuffer, positionBufferView.byteOffset, positionAccessor.count * 3);
+      const indexData = new Uint16Array(arrayBuffer, indexBufferView.byteOffset, indexAccessor.count);
+
+      vertices.push(...positionData);
+      indices.push(...indexData);
+    });
+  });
+
+  return { vertices, indices };
+}
+
+function createShader(gl, type, source) {
+  const shader = gl.createShader(type);
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    throw new Error('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader));
+  }
+  return shader;
+}
+
+function createProgram(gl, vertexShaderSource, fragmentShaderSource) {
+  const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+  const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+  const program = gl.createProgram();
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    throw new Error('Unable to initialize the shader program: ' + gl.getProgramInfoLog(program));
+  }
+  return program;
+}
+
 function GLTFRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewScale, onRenderComplete }) {
   const canvasRef = useRef(null);
-  const rendererRef = useRef(null);
-  const sceneRef = useRef(null);
-  const cameraRef = useRef(null);
   const meshRef = useRef(null);
 
   const [isDragging, setIsDragging] = useState(false);
@@ -55,54 +106,133 @@ function GLTFRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewS
   const memoizedGLTFRenderer = useMemo(() => {
     return async () => {
       const canvas = canvasRef.current;
-      const renderer = new THREE.WebGLRenderer({ canvas });
-      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-      rendererRef.current = renderer;
+      const gl = canvas.getContext('webgl2');
+      if (!gl) {
+        throw new Error('WebGL2 not supported');
+      }
 
-      const scene = new THREE.Scene();
-      sceneRef.current = scene;
+      const vertexShaderSource = `
+        attribute vec3 aVertexPosition;
+        attribute vec3 aVertexNormal;
+        uniform mat4 uModelViewMatrix;
+        uniform mat4 uProjectionMatrix;
+        uniform vec3 uLightPosition;
+        varying highp vec3 vLighting;
+        void main(void) {
+          gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
+          highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
+          highp vec3 directionalLightColor = vec3(1, 1, 1);
+          highp vec3 directionalVector = normalize(uLightPosition - aVertexPosition);
+          highp float directional = max(dot(aVertexNormal, directionalVector), 0.0);
+          vLighting = ambientLight + (directionalLightColor * directional);
+        }
+      `;
 
-      const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-      camera.position.set(0, 0, 5);
-      cameraRef.current = camera;
+      const fragmentShaderSource = `
+        varying highp vec3 vLighting;
+        uniform vec3 uLightColor;
+        void main(void) {
+          gl_FragColor = vec4(vLighting * uLightColor, 1.0);
+        }
+      `;
 
-      const light = new THREE.DirectionalLight(0xffffff, 1);
-      light.position.set(10, 10, 10);
-      scene.add(light);
-
-      const loader = new GLTFLoader();
-      loader.load(
-        URL.createObjectURL(file),
-        (gltf) => {
-          const model = gltf.scene;
-          scene.add(model);
-          meshRef.current = model;
-          animate();
-          console.log('glTF file rendered successfully.');
-          setIsRenderingComplete(true);
-          if (onRenderComplete) {
-            onRenderComplete();
-          }
+      const shaderProgram = createProgram(gl, vertexShaderSource, fragmentShaderSource);
+      const programInfo = {
+        program: shaderProgram,
+        attribLocations: {
+          vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+          vertexNormal: gl.getAttribLocation(shaderProgram, 'aVertexNormal'),
         },
-        undefined,
-        (error) => {
-          console.error('Error loading glTF file:', error);
-          if (onError) {
-            onError(error);
-          }
-        }
-      );
+        uniformLocations: {
+          projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
+          modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
+          lightPosition: gl.getUniformLocation(shaderProgram, 'uLightPosition'),
+          lightColor: gl.getUniformLocation(shaderProgram, 'uLightColor'),
+        },
+      };
 
-      const animate = function() {
-        if (!isRenderingComplete) {
-          requestAnimationFrame(animate);
-        }
-        renderer.render(scene, camera);
-        if (meshRef.current) {
-          meshRef.current.rotation.x = rotation.x;
-          meshRef.current.rotation.y = rotation.y;
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const arrayBuffer = event.target.result;
+        const { vertices, indices } = parseGLTF(arrayBuffer);
+
+        const vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+        const indexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+        const buffers = {
+          position: vertexBuffer,
+          indices: indexBuffer,
+        };
+
+        const scene = {
+          children: [
+            {
+              buffers,
+              vertexCount: indices.length,
+              render: (gl, programInfo, projectionMatrix, modelViewMatrix) => {
+                gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+                gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 3, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
+
+                gl.useProgram(programInfo.program);
+                gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
+                gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
+                gl.uniform3fv(programInfo.uniformLocations.lightPosition, [10, 10, 10]);
+                gl.uniform3fv(programInfo.uniformLocations.lightColor, [1, 1, 1]);
+
+                gl.drawElements(gl.TRIANGLES, buffers.vertexCount, gl.UNSIGNED_SHORT, 0);
+              },
+            },
+          ],
+        };
+
+        const camera = {
+          position: vec3.fromValues(0, 0, 5),
+          projectionMatrix: mat4.create(),
+          modelViewMatrix: mat4.create(),
+        };
+
+        mat4.perspective(camera.projectionMatrix, 45 * Math.PI / 180, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+        mat4.translate(camera.modelViewMatrix, camera.modelViewMatrix, camera.position);
+
+        const animate = function() {
+          if (!isRenderingComplete) {
+            requestAnimationFrame(animate);
+          }
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+          scene.children.forEach((child) => {
+            child.render(gl, programInfo, camera.projectionMatrix, camera.modelViewMatrix);
+          });
+
+          if (meshRef.current) {
+            mat4.rotateX(camera.modelViewMatrix, camera.modelViewMatrix, rotation.x);
+            mat4.rotateY(camera.modelViewMatrix, camera.modelViewMatrix, rotation.y);
+          }
+        };
+
+        animate();
+        console.log('glTF file rendered successfully.');
+        setIsRenderingComplete(true);
+        if (onRenderComplete) {
+          onRenderComplete();
         }
       };
+
+      reader.onerror = function(error) {
+        console.error('Error reading glTF file:', error);
+        if (onError) {
+          onError(error);
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
 
       const handleMouseDown = (event) => {
         setIsDragging(true);
@@ -131,12 +261,10 @@ function GLTFRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewS
 
       const handleResize = () => {
         const canvas = canvasRef.current;
-        if (canvas && renderer) {
+        if (canvas && gl) {
           const width = canvas.clientWidth * viewScale;
           const height = canvas.clientHeight * viewScale;
-          renderer.setSize(width, height);
-          camera.aspect = width / height;
-          camera.updateProjectionMatrix();
+          gl.viewport(0, 0, width, height);
         }
       };
 
@@ -161,25 +289,23 @@ function GLTFRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewS
 
   useEffect(() => {
     if (meshRef.current) {
-      meshRef.current.rotation.x = rotation.x;
-      meshRef.current.rotation.y = rotation.y;
+      mat4.rotateX(meshRef.current.modelViewMatrix, meshRef.current.modelViewMatrix, rotation.x);
+      mat4.rotateY(meshRef.current.modelViewMatrix, meshRef.current.modelViewMatrix, rotation.y);
     }
   }, [rotation]);
 
   useEffect(() => {
     if (meshRef.current) {
       const scale = Math.pow(2, zoomLevel / 10);
-      meshRef.current.scale.set(scale, scale, scale);
+      mat4.scale(meshRef.current.modelViewMatrix, meshRef.current.modelViewMatrix, [scale, scale, scale]);
     }
   }, [zoomLevel]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
-      const renderer = rendererRef.current;
-      if (renderer) {
-        renderer.setSize(canvas.clientWidth * performanceFactor * viewScale, canvas.clientHeight * performanceFactor * viewScale);
-      }
+      canvas.width = canvas.clientWidth * performanceFactor * viewScale;
+      canvas.height = canvas.clientHeight * performanceFactor * viewScale;
     }
   }, [viewScale, performanceFactor]);
 
@@ -189,15 +315,8 @@ function GLTFRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewS
       if (canvas) {
         const width = canvas.clientWidth * viewScale;
         const height = canvas.clientHeight * viewScale;
-        const renderer = rendererRef.current;
-        if (renderer) {
-          renderer.setSize(width, height);
-          const camera = cameraRef.current;
-          if (camera) {
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
-          }
-        }
+        canvas.width = width;
+        canvas.height = height;
       }
     };
 
@@ -215,15 +334,8 @@ function GLTFRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewS
       if (canvas) {
         const width = canvas.clientWidth * viewScale;
         const height = canvas.clientHeight * viewScale;
-        const renderer = rendererRef.current;
-        if (renderer) {
-          renderer.setSize(width, height);
-          const camera = cameraRef.current;
-          if (camera) {
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
-          }
-        }
+        canvas.width = width;
+        canvas.height = height;
       }
     };
 
