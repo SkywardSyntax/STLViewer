@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import STLRenderer from '../components/STLRenderer';
+import GLTFRenderer from '../components/GLTFRenderer';
 import ToggleSwitch from '../components/ToggleSwitch';
 
 function Home() {
@@ -14,23 +14,23 @@ function Home() {
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     if (selectedFile) {
-      console.log('STL file is being processed.');
+      console.log('glTF file is being processed.');
       setFile(selectedFile);
       setError(null);
       setIsRenderingComplete(false);
     } else {
-      setError('No file selected. Please select an STL file.');
+      setError('No file selected. Please select a glTF file.');
     }
   };
 
   const handleError = (error) => {
     if (error instanceof RangeError) {
-      setError('RangeError: Out of bounds access. This error can occur if the STL file is malformed or if there is an issue with the file reading process.');
+      setError('RangeError: Out of bounds access. This error can occur if the glTF file is malformed or if there is an issue with the file reading process.');
     } else if (error.message && error.message.startsWith('WebGL Error:')) {
       setError(error.message);
     } else if (error.message && error.message.startsWith('Three.js Error:')) {
       setError(error.message);
-    } else if (error.message && error.message.startsWith('STL Error:')) {
+    } else if (error.message && error.message.startsWith('glTF Error:')) {
       setError(error.message);
     } else if (error.message && error.message.startsWith('WebGL Context Error:')) {
       setError('WebGL Context Error: There was an issue with the WebGL context. Please try again or use a different browser.');
@@ -57,6 +57,7 @@ function Home() {
 
   const handleViewScaleChange = (event) => {
     setViewScale(event.target.value);
+    updateCanvasSize(event.target.value);
   };
 
   const handlePerformanceFactorChange = (event) => {
@@ -72,6 +73,16 @@ function Home() {
     setIsRenderingComplete(true);
   };
 
+  const updateCanvasSize = (scale) => {
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      const width = canvas.clientWidth * scale;
+      const height = canvas.clientHeight * scale;
+      canvas.width = width;
+      canvas.height = height;
+    }
+  };
+
   useEffect(() => {
     if (file) {
       setIsRenderingComplete(false);
@@ -79,19 +90,15 @@ function Home() {
   }, [file]);
 
   useEffect(() => {
-    const canvas = document.querySelector('canvas');
-    if (canvas) {
-      canvas.width = canvas.clientWidth * viewScale;
-      canvas.height = canvas.clientHeight * viewScale;
-    }
+    updateCanvasSize(viewScale);
   }, [viewScale]);
 
   return (
     <div className={`container ${isDarkMode ? 'dark-mode' : ''}`}>
       <main>
-        <h1>STL File Viewer</h1>
+        <h1>glTF File Viewer</h1>
         <ToggleSwitch onToggle={handleDarkModeToggle} />
-        <input type="file" accept=".stl" onChange={handleFileChange} />
+        <input type="file" accept=".gltf" onChange={handleFileChange} />
         <label htmlFor="zoomLevel">Zoom Level</label>
         <input type="range" id="zoomLevel" min="-100" max="100" step="1" value={zoomLevel} onChange={handleZoomChange} />
         <label htmlFor="viewScale">View Scale</label>
@@ -101,11 +108,11 @@ function Home() {
         {error && <p className="error">{error}</p>}
         {file ? (
           <>
-            <STLRenderer file={file} onError={handleError} zoomLevel={zoomLevel} performanceFactor={performanceFactor} viewScale={viewScale} onRenderComplete={handleRenderComplete} />
-            <p>{isRenderingComplete ? 'STL file rendering complete.' : 'STL file is being rendered.'}</p>
+            <GLTFRenderer file={file} onError={handleError} zoomLevel={zoomLevel} performanceFactor={performanceFactor} viewScale={viewScale} onRenderComplete={handleRenderComplete} />
+            <p>{isRenderingComplete ? 'glTF file rendering complete.' : 'glTF file is being rendered.'}</p>
           </>
         ) : (
-          <p>No STL file selected.</p>
+          <p>No glTF file selected.</p>
         )}
       </main>
     </div>

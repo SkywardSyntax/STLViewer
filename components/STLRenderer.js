@@ -118,12 +118,13 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
         attribute vec3 aVertexNormal;
         uniform mat4 uModelViewMatrix;
         uniform mat4 uProjectionMatrix;
+        uniform vec3 uLightPosition;
         varying highp vec3 vLighting;
         void main(void) {
           gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
           highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
           highp vec3 directionalLightColor = vec3(1, 1, 1);
-          highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+          highp vec3 directionalVector = normalize(uLightPosition - aVertexPosition);
           highp float directional = max(dot(aVertexNormal, directionalVector), 0.0);
           vLighting = ambientLight + (directionalLightColor * directional);
         }
@@ -131,8 +132,9 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
 
       const fragmentShaderSource = `
         varying highp vec3 vLighting;
+        uniform vec3 uLightColor;
         void main(void) {
-          gl_FragColor = vec4(vLighting, 1.0);
+          gl_FragColor = vec4(vLighting * uLightColor, 1.0);
         }
       `;
 
@@ -146,6 +148,8 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
         uniformLocations: {
           projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
           modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
+          lightPosition: gl.getUniformLocation(shaderProgram, 'uLightPosition'),
+          lightColor: gl.getUniformLocation(shaderProgram, 'uLightColor'),
         },
       };
 
@@ -184,6 +188,8 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
                 gl.useProgram(programInfo.program);
                 gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
                 gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
+                gl.uniform3fv(programInfo.uniformLocations.lightPosition, [10, 10, 10]);
+                gl.uniform3fv(programInfo.uniformLocations.lightColor, [1, 1, 1]);
 
                 gl.drawArrays(gl.TRIANGLES, 0, buffers.vertexCount);
               },
@@ -324,6 +330,20 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
     return () => {
       window.removeEventListener('resize', handleResize);
     };
+  }, [viewScale]);
+
+  useEffect(() => {
+    const handleViewScaleChange = () => {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const width = canvas.clientWidth * viewScale;
+        const height = canvas.clientHeight * viewScale;
+        canvas.width = width;
+        canvas.height = height;
+      }
+    };
+
+    handleViewScaleChange();
   }, [viewScale]);
 
   return <canvas ref={canvasRef} style={{ width: '800px', height: '600px' }}></canvas>;

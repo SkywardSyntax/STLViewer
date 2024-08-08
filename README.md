@@ -12,9 +12,9 @@ To run this application:
 npm run dev
 ```
 
-## STL File Viewer
+## glTF File Viewer
 
-This project allows you to upload an STL file and render it using the GPU with custom WebGL2 rendering logic.
+This project allows you to upload a glTF file and render it using the GPU with custom WebGL2 rendering logic.
 
 ### Instructions
 
@@ -36,33 +36,31 @@ This project allows you to upload an STL file and render it using the GPU with c
 
 4. Open your browser and navigate to `http://localhost:3000`.
 
-5. Upload an STL file using the file input.
+5. Upload a glTF file using the file input.
 
-6. The STL file will be rendered using custom WebGL2 rendering logic.
+6. The glTF file will be rendered using custom WebGL2 rendering logic.
 
 ### Click and Drag Functionality
 
-To rotate the STL file, click and drag on the canvas. The rotation will be updated based on the mouse movement.
+To rotate the glTF file, click and drag on the canvas. The rotation will be updated based on the mouse movement.
 
 ### Error Handling
 
 #### RangeError Exceptions
 
-If a RangeError occurs, it indicates an out-of-bounds access. This can happen if the STL file is malformed or if there is an issue with the file reading process. The application will display an error message indicating the RangeError.
+If a RangeError occurs, it indicates an out-of-bounds access. This can happen if the glTF file is malformed or if there is an issue with the file reading process. The application will display an error message indicating the RangeError.
 
 **Resolution Steps:**
-1. Verify the integrity of the STL file. Ensure it is not corrupted.
+1. Verify the integrity of the glTF file. Ensure it is not corrupted.
 2. Check the file reading process for any potential issues.
-3. Ensure the STL file is in binary format, as ASCII STL files are not supported.
 
 #### Out-of-Bounds Access Errors
 
-Out-of-bounds access errors can occur if the application tries to read data outside the bounds of the STL file. This can happen if the file is corrupted or if there is an issue with the file reading process. The application will display an error message indicating the out-of-bounds access error.
+Out-of-bounds access errors can occur if the application tries to read data outside the bounds of the glTF file. This can happen if the file is corrupted or if there is an issue with the file reading process. The application will display an error message indicating the out-of-bounds access error.
 
 **Resolution Steps:**
-1. Verify the integrity of the STL file. Ensure it is not corrupted.
+1. Verify the integrity of the glTF file. Ensure it is not corrupted.
 2. Check the file reading process for any potential issues.
-3. Ensure the STL file is in binary format, as ASCII STL files are not supported.
 
 #### WebGL Initialization Errors
 
@@ -92,28 +90,27 @@ If a WebGL program linking error occurs, it indicates that there is an issue wit
 2. Review the shader code for any issues that may cause linking errors.
 3. Check the specific error message from the WebGL context for more details.
 
-#### STL Parsing Errors
+#### glTF Parsing Errors
 
-If an STL parsing error occurs, it indicates that there is an issue with parsing the STL file. The application will display an error message indicating the STL parsing error. ASCII STL files are not supported, and the application will display an error message if an ASCII STL file is provided.
+If a glTF parsing error occurs, it indicates that there is an issue with parsing the glTF file. The application will display an error message indicating the glTF parsing error.
 
 **Resolution Steps:**
-1. Ensure that the STL file is in binary format, as ASCII STL files are not supported.
-2. Verify the integrity of the STL file. Ensure it is not corrupted.
-3. Check the file reading process for any potential issues.
+1. Verify the integrity of the glTF file. Ensure it is not corrupted.
+2. Check the file reading process for any potential issues.
 
 ### Optimizations
 
-The rendering of the STL file has been further optimized by implementing additional techniques and improvements:
+The rendering of the glTF file has been further optimized by implementing additional techniques and improvements:
 
 1. **Instancing**: Implemented instancing to reduce the number of draw calls. This technique allows multiple instances of the same geometry to be rendered with a single draw call, improving performance.
 
-2. **Efficient Data Structures and Algorithms**: Used more efficient data structures and algorithms for handling large STL files. This helps in reducing memory usage and improving the overall performance of the application.
+2. **Efficient Data Structures and Algorithms**: Used more efficient data structures and algorithms for handling large glTF files. This helps in reducing memory usage and improving the overall performance of the application.
 
 3. **Web Workers**: Utilized Web Workers to offload heavy computations from the main thread. This ensures that the main thread remains responsive and improves the performance of the application.
 
 4. **GPU-based Techniques**: Implemented GPU-based techniques like WebGL shaders for more efficient rendering. This allows for better utilization of the GPU and improves the rendering performance.
 
-These optimizations have significantly improved the performance of the STL file rendering, making the application more efficient and responsive.
+These optimizations have significantly improved the performance of the glTF file rendering, making the application more efficient and responsive.
 
 ### Performance Factor Slider
 
@@ -127,25 +124,25 @@ The application now includes a performance factor slider that allows users to dy
 
 **Benefits of the Performance Optimizations:**
 
-1. **Improved Rendering Speed**: The performance optimizations, including lazy loading, memoization, and Web Workers, significantly improve the rendering speed of the STL files.
+1. **Improved Rendering Speed**: The performance optimizations, including lazy loading, memoization, and Web Workers, significantly improve the rendering speed of the glTF files.
 2. **Reduced Main Thread Load**: By offloading heavy computations to Web Workers, the main thread remains responsive, resulting in a smoother user experience.
 3. **Dynamic Performance Adjustment**: The performance factor slider allows users to dynamically adjust the performance settings based on their preferences and device capabilities.
 4. **Efficient Resource Utilization**: The optimizations ensure efficient utilization of system resources, including CPU and GPU, leading to better overall performance.
 
-### Chunking Logic for STL Rendering
+### Chunking Logic for glTF Rendering
 
-The application now includes chunking logic for STL rendering, which processes and renders the STL file in chunks every frame. This approach improves the rendering performance and allows for smoother visualization of large STL files.
+The application now includes chunking logic for glTF rendering, which processes and renders the glTF file in chunks every frame. This approach improves the rendering performance and allows for smoother visualization of large glTF files.
 
 **Instructions for Using the Chunking Logic:**
 
-1. Upload an STL file using the file input.
-2. The application will automatically process and render the STL file in chunks every frame.
-3. The chunking logic ensures that the rendering process remains responsive and efficient, even for large STL files.
+1. Upload a glTF file using the file input.
+2. The application will automatically process and render the glTF file in chunks every frame.
+3. The chunking logic ensures that the rendering process remains responsive and efficient, even for large glTF files.
 
 **Benefits of the Chunking Logic:**
 
-1. **Improved Rendering Performance**: The chunking logic processes and renders the STL file in smaller chunks, reducing the load on the main thread and improving the overall rendering performance.
-2. **Smoother Visualization**: By rendering the STL file in chunks every frame, the application provides a smoother visualization experience, especially for large STL files.
+1. **Improved Rendering Performance**: The chunking logic processes and renders the glTF file in smaller chunks, reducing the load on the main thread and improving the overall rendering performance.
+2. **Smoother Visualization**: By rendering the glTF file in chunks every frame, the application provides a smoother visualization experience, especially for large glTF files.
 3. **Efficient Resource Utilization**: The chunking logic ensures efficient utilization of system resources, including CPU and GPU, leading to better overall performance.
 
 ### Dark Mode Feature
