@@ -14,18 +14,18 @@ function Home() {
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     if (selectedFile) {
-      console.log('glTF file is being processed.');
+      console.log('File is being processed.');
       setFile(selectedFile);
       setError(null);
       setIsRenderingComplete(false);
     } else {
-      setError('No file selected. Please select a glTF file.');
+      setError('No file selected. Please select a glTF or glb file.');
     }
   };
 
   const handleError = (error) => {
     if (error instanceof RangeError) {
-      setError('RangeError: Out of bounds access. This error can occur if the glTF file is malformed or if there is an issue with the file reading process.');
+      setError('RangeError: Length out of range of buffer. This error can occur if the glTF file is malformed or if there is an issue with the file reading process.');
     } else if (error.message && error.message.startsWith('WebGL Error:')) {
       setError(error.message);
     } else if (error.message && error.message.startsWith('Three.js Error:')) {
@@ -34,6 +34,10 @@ function Home() {
       setError(error.message);
     } else if (error.message && error.message.startsWith('WebGL Context Error:')) {
       setError('WebGL Context Error: There was an issue with the WebGL context. Please try again or use a different browser.');
+    } else if (error.message && error.message.startsWith('Buffer Length Error:')) {
+      setError('Buffer Length Error: The buffer length is incorrect. This can occur if the glTF file is malformed or if there is an issue with the file reading process.');
+    } else if (error.message && error.message.startsWith('Malformed glTF Error:')) {
+      setError('Malformed glTF Error: The glTF file is malformed. Please check the file and try again.');
     } else {
       setError(`An unexpected error occurred: ${error.message || error}`);
     }
@@ -96,9 +100,9 @@ function Home() {
   return (
     <div className={`container ${isDarkMode ? 'dark-mode' : ''}`}>
       <main>
-        <h1>glTF File Viewer</h1>
+        <h1>File Viewer</h1>
         <ToggleSwitch onToggle={handleDarkModeToggle} />
-        <input type="file" accept=".gltf" onChange={handleFileChange} />
+        <input type="file" accept=".gltf,.glb" onChange={handleFileChange} />
         <label htmlFor="zoomLevel">Zoom Level</label>
         <input type="range" id="zoomLevel" min="-100" max="100" step="1" value={zoomLevel} onChange={handleZoomChange} />
         <label htmlFor="viewScale">View Scale</label>
@@ -109,10 +113,10 @@ function Home() {
         {file ? (
           <>
             <GLTFRenderer file={file} onError={handleError} zoomLevel={zoomLevel} performanceFactor={performanceFactor} viewScale={viewScale} onRenderComplete={handleRenderComplete} />
-            <p>{isRenderingComplete ? 'glTF file rendering complete.' : 'glTF file is being rendered.'}</p>
+            <p>{isRenderingComplete ? 'File rendering complete.' : 'File is being rendered.'}</p>
           </>
         ) : (
-          <p>No glTF file selected.</p>
+          <p>No file selected.</p>
         )}
       </main>
     </div>

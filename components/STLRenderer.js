@@ -114,6 +114,7 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
       }
 
       const vertexShaderSource = `
+        precision mediump float;
         attribute vec3 aVertexPosition;
         attribute vec3 aVertexNormal;
         uniform mat4 uModelViewMatrix;
@@ -131,6 +132,7 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
       `;
 
       const fragmentShaderSource = `
+        precision mediump float;
         varying highp vec3 vLighting;
         uniform vec3 uLightColor;
         void main(void) {
@@ -156,76 +158,83 @@ function STLRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewSc
       const reader = new FileReader();
       reader.onload = function(event) {
         const arrayBuffer = event.target.result;
-        const { vertices, normals } = parseSTL(arrayBuffer);
+        try {
+          const { vertices, normals } = parseSTL(arrayBuffer);
 
-        const vertexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), gl.STATIC_DRAW);
+          const vertexBuffer = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), gl.STATIC_DRAW);
 
-        const normalBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals.flat()), gl.STATIC_DRAW);
+          const normalBuffer = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals.flat()), gl.STATIC_DRAW);
 
-        const buffers = {
-          position: vertexBuffer,
-          normal: normalBuffer,
-        };
+          const buffers = {
+            position: vertexBuffer,
+            normal: normalBuffer,
+          };
 
-        const scene = {
-          children: [
-            {
-              buffers,
-              vertexCount: vertices.length,
-              render: (gl, programInfo, projectionMatrix, modelViewMatrix) => {
-                gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
-                gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 3, gl.FLOAT, false, 0, 0);
-                gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+          const scene = {
+            children: [
+              {
+                buffers,
+                vertexCount: vertices.length,
+                render: (gl, programInfo, projectionMatrix, modelViewMatrix) => {
+                  gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+                  gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 3, gl.FLOAT, false, 0, 0);
+                  gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
 
-                gl.bindBuffer(gl.ARRAY_BUFFER, buffers.normal);
-                gl.vertexAttribPointer(programInfo.attribLocations.vertexNormal, 3, gl.FLOAT, false, 0, 0);
-                gl.enableVertexAttribArray(programInfo.attribLocations.vertexNormal);
+                  gl.bindBuffer(gl.ARRAY_BUFFER, buffers.normal);
+                  gl.vertexAttribPointer(programInfo.attribLocations.vertexNormal, 3, gl.FLOAT, false, 0, 0);
+                  gl.enableVertexAttribArray(programInfo.attribLocations.vertexNormal);
 
-                gl.useProgram(programInfo.program);
-                gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
-                gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
-                gl.uniform3fv(programInfo.uniformLocations.lightPosition, [10, 10, 10]);
-                gl.uniform3fv(programInfo.uniformLocations.lightColor, [1, 1, 1]);
+                  gl.useProgram(programInfo.program);
+                  gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
+                  gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
+                  gl.uniform3fv(programInfo.uniformLocations.lightPosition, [10, 10, 10]);
+                  gl.uniform3fv(programInfo.uniformLocations.lightColor, [1, 1, 1]);
 
-                gl.drawArrays(gl.TRIANGLES, 0, buffers.vertexCount);
+                  gl.drawArrays(gl.TRIANGLES, 0, buffers.vertexCount);
+                },
               },
-            },
-          ],
-        };
+            ],
+          };
 
-        const camera = {
-          position: vec3.fromValues(0, 0, 5),
-          projectionMatrix: mat4.create(),
-          modelViewMatrix: mat4.create(),
-        };
+          const camera = {
+            position: vec3.fromValues(0, 0, 5),
+            projectionMatrix: mat4.create(),
+            modelViewMatrix: mat4.create(),
+          };
 
-        mat4.perspective(camera.projectionMatrix, 45 * Math.PI / 180, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-        mat4.translate(camera.modelViewMatrix, camera.modelViewMatrix, camera.position);
+          mat4.perspective(camera.projectionMatrix, 45 * Math.PI / 180, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+          mat4.translate(camera.modelViewMatrix, camera.modelViewMatrix, camera.position);
 
-        const animate = function() {
-          if (!isRenderingComplete) {
-            requestAnimationFrame(animate);
+          const animate = function() {
+            if (!isRenderingComplete) {
+              requestAnimationFrame(animate);
+            }
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            scene.children.forEach((child) => {
+              child.render(gl, programInfo, camera.projectionMatrix, camera.modelViewMatrix);
+            });
+
+            if (meshRef.current) {
+              mat4.rotateX(camera.modelViewMatrix, camera.modelViewMatrix, rotation.x);
+              mat4.rotateY(camera.modelViewMatrix, camera.modelViewMatrix, rotation.y);
+            }
+          };
+
+          animate();
+          console.log('STL file rendered successfully.');
+          setIsRenderingComplete(true);
+          if (onRenderComplete) {
+            onRenderComplete();
           }
-          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-          scene.children.forEach((child) => {
-            child.render(gl, programInfo, camera.projectionMatrix, camera.modelViewMatrix);
-          });
-
-          if (meshRef.current) {
-            mat4.rotateX(camera.modelViewMatrix, camera.modelViewMatrix, rotation.x);
-            mat4.rotateY(camera.modelViewMatrix, camera.modelViewMatrix, rotation.y);
+        } catch (error) {
+          console.error('Error parsing STL file:', error);
+          if (onError) {
+            onError(error);
           }
-        };
-
-        animate();
-        console.log('STL file rendered successfully.');
-        setIsRenderingComplete(true);
-        if (onRenderComplete) {
-          onRenderComplete();
         }
       };
 

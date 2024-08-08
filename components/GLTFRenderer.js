@@ -41,6 +41,9 @@ class CustomPathTracingMaterial {
 function parseGLTF(arrayBuffer) {
   const dataView = new DataView(arrayBuffer);
   const jsonChunkLength = dataView.getUint32(12, true);
+  if (arrayBuffer.byteLength < 20 + jsonChunkLength) {
+    throw new RangeError('Length out of range of buffer');
+  }
   const jsonChunkData = new Uint8Array(arrayBuffer, 20, jsonChunkLength);
   const jsonString = new TextDecoder().decode(jsonChunkData);
   const gltf = JSON.parse(jsonString);
@@ -59,6 +62,13 @@ function parseGLTF(arrayBuffer) {
 
       const positionBufferView = bufferViews[positionAccessor.bufferView];
       const indexBufferView = bufferViews[indexAccessor.bufferView];
+
+      if (arrayBuffer.byteLength < positionBufferView.byteOffset + positionAccessor.count * 3 * 4) {
+        throw new RangeError('Length out of range of buffer');
+      }
+      if (arrayBuffer.byteLength < indexBufferView.byteOffset + indexAccessor.count * 2) {
+        throw new RangeError('Length out of range of buffer');
+      }
 
       const positionData = new Float32Array(arrayBuffer, positionBufferView.byteOffset, positionAccessor.count * 3);
       const indexData = new Uint16Array(arrayBuffer, indexBufferView.byteOffset, indexAccessor.count);
@@ -112,6 +122,7 @@ function GLTFRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewS
       }
 
       const vertexShaderSource = `
+        precision mediump float;
         attribute vec3 aVertexPosition;
         attribute vec3 aVertexNormal;
         uniform mat4 uModelViewMatrix;
@@ -129,6 +140,7 @@ function GLTFRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewS
       `;
 
       const fragmentShaderSource = `
+        precision mediump float;
         varying highp vec3 vLighting;
         uniform vec3 uLightColor;
         void main(void) {
@@ -154,74 +166,81 @@ function GLTFRenderer({ file, onError, zoomLevel, performanceFactor = 0.5, viewS
       const reader = new FileReader();
       reader.onload = function(event) {
         const arrayBuffer = event.target.result;
-        const { vertices, indices } = parseGLTF(arrayBuffer);
+        try {
+          const { vertices, indices } = parseGLTF(arrayBuffer);
 
-        const vertexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+          const vertexBuffer = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-        const indexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+          const indexBuffer = gl.createBuffer();
+          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+          gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
 
-        const buffers = {
-          position: vertexBuffer,
-          indices: indexBuffer,
-        };
+          const buffers = {
+            position: vertexBuffer,
+            indices: indexBuffer,
+          };
 
-        const scene = {
-          children: [
-            {
-              buffers,
-              vertexCount: indices.length,
-              render: (gl, programInfo, projectionMatrix, modelViewMatrix) => {
-                gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
-                gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 3, gl.FLOAT, false, 0, 0);
-                gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+          const scene = {
+            children: [
+              {
+                buffers,
+                vertexCount: indices.length,
+                render: (gl, programInfo, projectionMatrix, modelViewMatrix) => {
+                  gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+                  gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 3, gl.FLOAT, false, 0, 0);
+                  gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
 
-                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
+                  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
 
-                gl.useProgram(programInfo.program);
-                gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
-                gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
-                gl.uniform3fv(programInfo.uniformLocations.lightPosition, [10, 10, 10]);
-                gl.uniform3fv(programInfo.uniformLocations.lightColor, [1, 1, 1]);
+                  gl.useProgram(programInfo.program);
+                  gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
+                  gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
+                  gl.uniform3fv(programInfo.uniformLocations.lightPosition, [10, 10, 10]);
+                  gl.uniform3fv(programInfo.uniformLocations.lightColor, [1, 1, 1]);
 
-                gl.drawElements(gl.TRIANGLES, buffers.vertexCount, gl.UNSIGNED_SHORT, 0);
+                  gl.drawElements(gl.TRIANGLES, buffers.vertexCount, gl.UNSIGNED_SHORT, 0);
+                },
               },
-            },
-          ],
-        };
+            ],
+          };
 
-        const camera = {
-          position: vec3.fromValues(0, 0, 5),
-          projectionMatrix: mat4.create(),
-          modelViewMatrix: mat4.create(),
-        };
+          const camera = {
+            position: vec3.fromValues(0, 0, 5),
+            projectionMatrix: mat4.create(),
+            modelViewMatrix: mat4.create(),
+          };
 
-        mat4.perspective(camera.projectionMatrix, 45 * Math.PI / 180, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-        mat4.translate(camera.modelViewMatrix, camera.modelViewMatrix, camera.position);
+          mat4.perspective(camera.projectionMatrix, 45 * Math.PI / 180, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+          mat4.translate(camera.modelViewMatrix, camera.modelViewMatrix, camera.position);
 
-        const animate = function() {
-          if (!isRenderingComplete) {
-            requestAnimationFrame(animate);
+          const animate = function() {
+            if (!isRenderingComplete) {
+              requestAnimationFrame(animate);
+            }
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            scene.children.forEach((child) => {
+              child.render(gl, programInfo, camera.projectionMatrix, camera.modelViewMatrix);
+            });
+
+            if (meshRef.current) {
+              mat4.rotateX(camera.modelViewMatrix, camera.modelViewMatrix, rotation.x);
+              mat4.rotateY(camera.modelViewMatrix, camera.modelViewMatrix, rotation.y);
+            }
+          };
+
+          animate();
+          console.log('glTF file rendered successfully.');
+          setIsRenderingComplete(true);
+          if (onRenderComplete) {
+            onRenderComplete();
           }
-          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-          scene.children.forEach((child) => {
-            child.render(gl, programInfo, camera.projectionMatrix, camera.modelViewMatrix);
-          });
-
-          if (meshRef.current) {
-            mat4.rotateX(camera.modelViewMatrix, camera.modelViewMatrix, rotation.x);
-            mat4.rotateY(camera.modelViewMatrix, camera.modelViewMatrix, rotation.y);
+        } catch (error) {
+          console.error('Error parsing glTF file:', error);
+          if (onError) {
+            onError(error);
           }
-        };
-
-        animate();
-        console.log('glTF file rendered successfully.');
-        setIsRenderingComplete(true);
-        if (onRenderComplete) {
-          onRenderComplete();
         }
       };
 

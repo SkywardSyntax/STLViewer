@@ -14,7 +14,7 @@ npm run dev
 
 ## glTF File Viewer
 
-This project allows you to upload a glTF file and render it using the GPU with custom WebGL2 rendering logic.
+This project allows you to upload a glTF or glb file and render it using the GPU with custom WebGL2 rendering logic.
 
 ### Instructions
 
@@ -36,13 +36,13 @@ This project allows you to upload a glTF file and render it using the GPU with c
 
 4. Open your browser and navigate to `http://localhost:3000`.
 
-5. Upload a glTF file using the file input.
+5. Upload a glTF or glb file using the file input.
 
-6. The glTF file will be rendered using custom WebGL2 rendering logic.
+6. The glTF or glb file will be rendered using custom WebGL2 rendering logic.
 
 ### Click and Drag Functionality
 
-To rotate the glTF file, click and drag on the canvas. The rotation will be updated based on the mouse movement.
+To rotate the glTF or glb file, click and drag on the canvas. The rotation will be updated based on the mouse movement.
 
 ### Error Handling
 
