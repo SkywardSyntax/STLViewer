@@ -34,7 +34,6 @@ button.btn:focus {
   box-shadow: 0 0 0 2px rgba(0, 118, 255, 0.5);
 }
 
-/* P53a9 */
 button.btn {
   font-size: 1.1rem; /* Slightly larger font size for better readability */
   padding: 0.75em 1.25em; /* Increased padding for a more substantial feel */
