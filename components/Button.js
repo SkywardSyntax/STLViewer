@@ -1,6 +1,5 @@
 import styles from './Button.module.css'
 
-export default function Button({ isSelected, ...props }) {
-  const buttonClass = isSelected ? `${styles.btn} ${styles.selected}` : styles.btn;
-  return <button type="button" className={buttonClass} {...props} />
+export default function Button({ ...props }) {
+  return <button type="button" className={styles.btn} {...props} />
 }

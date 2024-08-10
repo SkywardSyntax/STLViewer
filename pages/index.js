@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import ToggleSwitch from '../components/ToggleSwitch';
 import { StlViewer } from 'react-stl-viewer';
 import Button from '../components/Button';
+import IntroCard from '../components/IntroCard';
 
 function Home() {
   const [file, setFile] = useState(null);
@@ -10,6 +10,7 @@ function Home() {
   const [isRenderingComplete, setIsRenderingComplete] = useState(false);
   const [stlUrl, setStlUrl] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
+  const [showIntroCard, setShowIntroCard] = useState(true);
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -19,6 +20,7 @@ function Home() {
       setSelectedFile(selectedFile);
       setError(null);
       setIsRenderingComplete(false);
+      setShowIntroCard(false);
     } else {
       setError('No file selected. Please select an STL file.');
     }
@@ -44,11 +46,6 @@ function Home() {
     } else {
       setError(`An unexpected error occurred: ${error.message || error}`);
     }
-  };
-
-  const handleDarkModeToggle = (isOn) => {
-    setIsDarkMode(isOn);
-    document.body.classList.toggle('dark-mode', isOn);
   };
 
   const handleRenderComplete = () => {
@@ -77,18 +74,29 @@ function Home() {
       setSelectedFile(null);
       setError(null);
       setIsRenderingComplete(false);
+      setShowIntroCard(false);
     }
   }, [stlUrl]);
+
+  useEffect(() => {
+    const isFirstLoad = localStorage.getItem('isFirstLoad') === null;
+    if (isFirstLoad) {
+      setShowIntroCard(true);
+      localStorage.setItem('isFirstLoad', 'false');
+    } else {
+      setShowIntroCard(false);
+    }
+  }, []);
 
   return (
     <div className={`container ${isDarkMode ? 'dark-mode' : ''}`}>
       <main>
+        {showIntroCard && <IntroCard />}
         <h1>File Viewer</h1>
-        <ToggleSwitch onToggle={handleDarkModeToggle} />
-        <input type="file" accept=".stl" onChange={handleFileChange} />
-        <Button isSelected={selectedFile !== null} onClick={() => document.querySelector('input[type="file"]').click()}>
+        <input type="file" accept=".stl" onChange={handleFileChange} className="custom-file-input" id="fileInput" />
+        <label htmlFor="fileInput" className="custom-file-label">
           {selectedFile ? 'Change File' : 'Select File'}
-        </Button>
+        </label>
         <label htmlFor="stlUrl">STL File URL</label>
         <input type="text" id="stlUrl" value={stlUrl} onChange={(e) => setStlUrl(e.target.value)} />
         {error && <p className="error">{error}</p>}
