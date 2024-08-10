@@ -157,3 +157,191 @@ The `ToggleSwitch` component is a reusable UI element that allows users to toggl
 1. **Reusability**: The `ToggleSwitch` component can be reused in different parts of the application, promoting code reusability and consistency.
 2. **Customizability**: The component can be easily customized to fit the application's design and requirements.
 3. **User-Friendly**: The toggle switch provides a user-friendly way to enable or disable features, enhancing the overall user experience.
+
+### New Styles and Themes
+
+The application now includes new styles for different elements and themes. These styles enhance the visual appeal and usability of the application.
+
+**New Styles for Buttons:**
+
+1. **Button States:**
+   - Active: `.btn:active`
+   - Disabled: `.btn:disabled`
+   - Loading: `.btn.loading`
+
+2. **Button Sizes:**
+   - Small: `.btn.small`
+   - Medium: `.btn.medium`
+   - Large: `.btn.large`
+
+3. **Button Variants:**
+   - Primary: `.btn.primary`
+   - Secondary: `.btn.secondary`
+   - Tertiary: `.btn.tertiary`
+
+**New Styles for Cards:**
+
+1. **Card States:**
+   - Active: `.card.active`
+   - Disabled: `.card.disabled`
+   - Loading: `.card.loading`
+
+2. **Card Sizes:**
+   - Small: `.card.small`
+   - Medium: `.card.medium`
+   - Large: `.card.large`
+
+3. **Card Variants:**
+   - Primary: `.card.primary`
+   - Secondary: `.card.secondary`
+   - Tertiary: `.card.tertiary`
+
+**New Global Styles:**
+
+1. **Headings:**
+   - `h1, h2, h3, h4, h5, h6`
+
+2. **Paragraphs:**
+   - `p`
+
+3. **Links:**
+   - `a`
+   - `a:hover`
+
+**New Themes:**
+
+1. **Light Mode:**
+   - `.light-mode`
+   - `.light-mode main`
+   - `.light-mode canvas`
+
+2. **Dark Mode:**
+   - `.dark-mode`
+   - `.dark-mode main`
+   - `.dark-mode canvas`
+
+**New Breakpoints:**
+
+1. **Mobile:**
+   - `@media (max-width: 600px)`
+
+2. **Tablet:**
+   - `@media (min-width: 601px) and (max-width: 1024px)`
+
+3. **Desktop:**
+   - `@media (min-width: 1025px)`
+
+### Examples of Using New Styles and Themes
+
+**Button Examples:**
+
+```html
+<button class="btn primary">Primary Button</button>
+<button class="btn secondary">Secondary Button</button>
+<button class="btn tertiary">Tertiary Button</button>
+<button class="btn small">Small Button</button>
+<button class="btn medium">Medium Button</button>
+<button class="btn large">Large Button</button>
+<button class="btn loading">Loading Button</button>
+<button class="btn" disabled>Disabled Button</button>
+```
+
+**Card Examples:**
+
+```html
+<div class="card primary">Primary Card</div>
+<div class="card secondary">Secondary Card</div>
+<div class="card tertiary">Tertiary Card</div>
+<div class="card small">Small Card</div>
+<div class="card medium">Medium Card</div>
+<div class="card large">Large Card</div>
+<div class="card loading">Loading Card</div>
+<div class="card disabled">Disabled Card</div>
+```
+
+**Global Styles Examples:**
+
+```html
+<h1>Heading 1</h1>
+<p>This is a paragraph.</p>
+<a href="#">This is a link</a>
+```
+
+**Theme Examples:**
+
+```html
+<div class="light-mode">
+  <main>
+    <canvas></canvas>
+  </main>
+</div>
+
+<div class="dark-mode">
+  <main>
+    <canvas></canvas>
+  </main>
+</div>
+```
+
+### Updated Instructions for Running the Application
+
+To run this application with the new styles and themes:
+
+1. Clone the repository:
+   ```
+   git clone <repository-url>
+   cd <repository-directory>
+   ```
+
+2. Install dependencies:
+   ```
+   npm install
+   ```
+
+3. Run the development server:
+   ```
+   npm run dev
+   ```
+
+4. Open your browser and navigate to `http://localhost:3000`.
+
+5. Upload an STL file using the file input.
+
+6. The STL file will be rendered using `react-stl-viewer` and three.js.
+
+7. Use the new styles and themes as described in the examples above.
+
+### Loading and Landing Animations
+
+The application now includes loading and landing animations to enhance the user experience.
+
+**Loading Animation:**
+
+The loading animation is displayed while the STL file is being rendered. It provides visual feedback to the user, indicating that the rendering process is in progress.
+
+**Landing Animation:**
+
+The landing animation is displayed when the STL file is being rendered for the first time. It provides a smooth transition and visual appeal to the application.
+
+**Usage Instructions:**
+
+1. The loading animation is automatically displayed when the STL file is being rendered. No additional configuration is required.
+2. The landing animation is automatically displayed when the STL file is being rendered for the first time. No additional configuration is required.
+
+**Benefits of Loading and Landing Animations:**
+
+1. **Enhanced User Experience**: The animations provide visual feedback to the user, making the application more interactive and engaging.
+2. **Smooth Transitions**: The landing animation provides a smooth transition when the STL file is being rendered for the first time, enhancing the visual appeal of the application.
+3. **Improved Visual Appeal**: The animations add a modern and polished look to the application, making it more visually appealing.
+
+### Examples of Loading and Landing Animations
+
+**Loading Animation Example:**
+
+```html
+<div class="loading-spinner"></div>
+```
+
+**Landing Animation Example:**
+
+The landing animation is automatically displayed when the STL file is being rendered for the first time. No additional configuration is required.

@@ -19,3 +19,52 @@
   font-size: 1rem;
   margin-bottom: 10px;
 }
+
+/* New styles for different card states */
+.card.active {
+  border: 2px solid #0076ff;
+}
+
+.card.disabled {
+  background: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+}
+
+.card.loading {
+  background: #0076ff;
+  color: #ffffff;
+  cursor: progress;
+}
+
+/* New styles for different card sizes */
+.card.small {
+  font-size: 0.8rem;
+  padding: 0.4em 0.8em;
+}
+
+.card.medium {
+  font-size: 1rem;
+  padding: 0.65em 1em;
+}
+
+.card.large {
+  font-size: 1.2rem;
+  padding: 0.85em 1.5em;
+}
+
+/* New styles for different card variants */
+.card.primary {
+  background: #0076ff;
+  color: #ffffff;
+}
+
+.card.secondary {
+  background: #555555;
+  color: #ffffff;
+}
+
+.card.tertiary {
+  background: #cccccc;
+  color: #333333;
+}

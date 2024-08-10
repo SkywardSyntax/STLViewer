@@ -186,3 +186,108 @@ button:focus {
   box-shadow: 0 0 0 4px rgba(0, 118, 255, 0.5);
   transition: box-shadow 0.2s ease;
 }
+
+/* New global styles for different elements */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: bold;
+  margin: 0.5em 0;
+}
+
+p {
+  margin: 0.5em 0;
+}
+
+a {
+  color: #0076ff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* New styles for different themes */
+.light-mode {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+.light-mode main {
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.light-mode canvas {
+  background-color: #ffffff;
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+}
+
+/* New styles for different breakpoints */
+@media (max-width: 600px) {
+  body {
+    font-size: 14px;
+  }
+
+  main {
+    padding: 10px;
+  }
+
+  .custom-file-label {
+    font-size: 1rem;
+    padding: 0.5em 1em;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 1024px) {
+  body {
+    font-size: 15px;
+  }
+
+  main {
+    padding: 15px;
+  }
+
+  .custom-file-label {
+    font-size: 1.05rem;
+    padding: 0.65em 1.1em;
+  }
+}
+
+@media (min-width: 1025px) {
+  body {
+    font-size: 16px;
+  }
+
+  main {
+    padding: 20px;
+  }
+
+  .custom-file-label {
+    font-size: 1.1rem;
+    padding: 0.75em 1.25em;
+  }
+}
+
+/* Loading animation */
+@keyframes loadingAnimation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-spinner {
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid #ffffff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: loadingAnimation 1s linear infinite;
+}

@@ -11,6 +11,7 @@ function Home() {
   const [stlUrl, setStlUrl] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [showIntroCard, setShowIntroCard] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -21,6 +22,7 @@ function Home() {
       setError(null);
       setIsRenderingComplete(false);
       setShowIntroCard(false);
+      setIsLoading(true);
     } else {
       setError('No file selected. Please select an STL file.');
     }
@@ -46,10 +48,12 @@ function Home() {
     } else {
       setError(`An unexpected error occurred: ${error.message || error}`);
     }
+    setIsLoading(false);
   };
 
   const handleRenderComplete = () => {
     setIsRenderingComplete(true);
+    setIsLoading(false);
   };
 
   const updateCanvasSize = (scale) => {
@@ -75,6 +79,7 @@ function Home() {
       setError(null);
       setIsRenderingComplete(false);
       setShowIntroCard(false);
+      setIsLoading(true);
     }
   }, [stlUrl]);
 
@@ -100,6 +105,7 @@ function Home() {
         <label htmlFor="stlUrl">STL File URL</label>
         <input type="text" id="stlUrl" value={stlUrl} onChange={(e) => setStlUrl(e.target.value)} />
         {error && <p className="error">{error}</p>}
+        {isLoading && <div className="loading-spinner"></div>}
         {file ? (
           <>
             <StlViewer

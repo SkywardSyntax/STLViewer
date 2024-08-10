@@ -55,3 +55,48 @@ button.btn:focus {
   box-shadow: 0 0 0 4px rgba(0, 118, 255, 0.5);
   transition: box-shadow 0.2s ease;
 }
+
+/* New styles for different button states */
+button.btn:disabled {
+  background: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+}
+
+button.btn.loading {
+  background: #0076ff;
+  color: #ffffff;
+  cursor: progress;
+}
+
+/* New styles for different button sizes */
+button.btn.small {
+  font-size: 0.8rem;
+  padding: 0.4em 0.8em;
+}
+
+button.btn.medium {
+  font-size: 1rem;
+  padding: 0.65em 1em;
+}
+
+button.btn.large {
+  font-size: 1.2rem;
+  padding: 0.85em 1.5em;
+}
+
+/* New styles for different button variants */
+button.btn.primary {
+  background: #0076ff;
+  color: #ffffff;
+}
+
+button.btn.secondary {
+  background: #555555;
+  color: #ffffff;
+}
+
+button.btn.tertiary {
+  background: #cccccc;
+  color: #333333;
+}
