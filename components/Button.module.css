@@ -40,3 +40,24 @@ button.btn {
   border-radius: 8px; /* More rounded corners for a modern look */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
 }
+
+button.selected {
+  background: #0076ff; /* Blue background color for selected state */
+  color: #ffffff; /* Light text color for selected state */
+  border: 2px solid #005bb5; /* Darker blue border for selected state */
+}
+
+button.btn:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease;
+}
+
+button.btn:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+button.btn:focus {
+  box-shadow: 0 0 0 4px rgba(0, 118, 255, 0.5);
+  transition: box-shadow 0.2s ease;
+}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import ToggleSwitch from '../components/ToggleSwitch';
 import { StlViewer } from 'react-stl-viewer';
+import Button from '../components/Button';
 
 function Home() {
   const [file, setFile] = useState(null);
@@ -8,12 +9,14 @@ function Home() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isRenderingComplete, setIsRenderingComplete] = useState(false);
   const [stlUrl, setStlUrl] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     if (selectedFile) {
       console.log('File is being processed.');
       setFile(selectedFile);
+      setSelectedFile(selectedFile);
       setError(null);
       setIsRenderingComplete(false);
     } else {
@@ -68,12 +71,24 @@ function Home() {
     }
   }, [file]);
 
+  useEffect(() => {
+    if (stlUrl) {
+      setFile(null);
+      setSelectedFile(null);
+      setError(null);
+      setIsRenderingComplete(false);
+    }
+  }, [stlUrl]);
+
   return (
     <div className={`container ${isDarkMode ? 'dark-mode' : ''}`}>
       <main>
         <h1>File Viewer</h1>
         <ToggleSwitch onToggle={handleDarkModeToggle} />
         <input type="file" accept=".stl" onChange={handleFileChange} />
+        <Button isSelected={selectedFile !== null} onClick={() => document.querySelector('input[type="file"]').click()}>
+          {selectedFile ? 'Change File' : 'Select File'}
+        </Button>
         <label htmlFor="stlUrl">STL File URL</label>
         <input type="text" id="stlUrl" value={stlUrl} onChange={(e) => setStlUrl(e.target.value)} />
         {error && <p className="error">{error}</p>}
@@ -81,6 +96,17 @@ function Home() {
           <>
             <StlViewer
               url={URL.createObjectURL(file)}
+              cameraProps={{ distance: 50, latitude: Math.PI / 6, longitude: Math.PI / 4 }}
+              style={{ width: '400px', height: '300px' }}
+              onError={handleError}
+              onFinishLoading={handleRenderComplete}
+            />
+            <p>{isRenderingComplete ? 'File rendering complete.' : 'File is being rendered.'}</p>
+          </>
+        ) : stlUrl ? (
+          <>
+            <StlViewer
+              url={stlUrl}
               cameraProps={{ distance: 50, latitude: Math.PI / 6, longitude: Math.PI / 4 }}
               style={{ width: '400px', height: '300px' }}
               onError={handleError}

@@ -169,3 +169,18 @@ label {
   backdrop-filter: blur(10px);
   border-radius: 10px;
 }
+
+button:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease;
+}
+
+button:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+button:focus {
+  box-shadow: 0 0 0 4px rgba(0, 118, 255, 0.5);
+  transition: box-shadow 0.2s ease;
+}
