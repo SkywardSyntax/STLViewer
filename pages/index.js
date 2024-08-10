@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import ToggleSwitch from '../components/ToggleSwitch';
-import STLRenderer from '../components/STLRenderer';
+import { StlViewer } from 'react-stl-viewer';
 
 function Home() {
   const [file, setFile] = useState(null);
   const [error, setError] = useState(null);
-  const [zoomLevel, setZoomLevel] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isRenderingComplete, setIsRenderingComplete] = useState(false);
   const [stlUrl, setStlUrl] = useState('');
@@ -44,22 +43,6 @@ function Home() {
     }
   };
 
-  const debounce = (func, wait) => {
-    let timeout;
-    return function(...args) {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func.apply(this, args), wait);
-    };
-  };
-
-  const debouncedZoomChange = debounce((value) => {
-    setZoomLevel(value);
-  }, 100);
-
-  const handleZoomChange = (event) => {
-    debouncedZoomChange(event.target.value);
-  };
-
   const handleDarkModeToggle = (isOn) => {
     setIsDarkMode(isOn);
     document.body.classList.toggle('dark-mode', isOn);
@@ -91,14 +74,18 @@ function Home() {
         <h1>File Viewer</h1>
         <ToggleSwitch onToggle={handleDarkModeToggle} />
         <input type="file" accept=".stl" onChange={handleFileChange} />
-        <label htmlFor="zoomLevel">Zoom Level</label>
-        <input type="range" id="zoomLevel" min="-100" max="100" step="1" value={zoomLevel} onChange={handleZoomChange} />
         <label htmlFor="stlUrl">STL File URL</label>
         <input type="text" id="stlUrl" value={stlUrl} onChange={(e) => setStlUrl(e.target.value)} />
         {error && <p className="error">{error}</p>}
         {file ? (
           <>
-            <STLRenderer file={file} onError={handleError} zoomLevel={zoomLevel} onRenderComplete={handleRenderComplete} />
+            <StlViewer
+              url={URL.createObjectURL(file)}
+              cameraProps={{ distance: 50, latitude: Math.PI / 6, longitude: Math.PI / 4 }}
+              style={{ width: '400px', height: '300px' }}
+              onError={handleError}
+              onFinishLoading={handleRenderComplete}
+            />
             <p>{isRenderingComplete ? 'File rendering complete.' : 'File is being rendered.'}</p>
           </>
         ) : (

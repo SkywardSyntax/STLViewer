@@ -14,7 +14,7 @@ npm run dev
 
 ## STL File Viewer
 
-This project allows you to upload an STL file and render it using the GPU with custom WebGL2 rendering logic.
+This project allows you to upload an STL file and render it using the GPU with `react-stl-viewer` and three.js.
 
 ### Instructions
 
@@ -38,7 +38,7 @@ This project allows you to upload an STL file and render it using the GPU with c
 
 5. Upload an STL file using the file input.
 
-6. The STL file will be rendered using custom WebGL2 rendering logic.
+6. The STL file will be rendered using `react-stl-viewer` and three.js.
 
 ### Click and Drag Functionality
 
